@@ -4,16 +4,17 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 02: Editor Chrome
+* Feature 03: Auth
 
 ## Current Goal
 
-* Build the reusable editor navbar and floating project sidebar shell, then prepare the dialog styling pattern for future dialogs.
+* Implement Clerk authentication, protected routes, auth redirects, and editor user account controls.
 
 ## Completed
 
 * Feature 01: Design System - shadcn/ui configured, Button, Card, Dialog, Input, Tabs, Textarea, ScrollArea added, lucide-react installed, and lib/utils.ts cn() helper created.
 * Feature 02: Editor Chrome - reusable editor navbar, floating project sidebar, page shell wiring, and dialog pattern styling completed.
+* Feature 03: Auth - Clerk provider, auth pages, protected routes, root redirects, editor shell route, and UserButton integration completed.
 
 ## In Progress
 
@@ -21,7 +22,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-* Feature 03 (TBD)
+* Feature 04 (TBD)
 
 ## Open Questions
 
@@ -42,3 +43,6 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 02 dialog pattern prepared by aligning existing shadcn dialog overlay/content/header/footer/title/description styling with dark theme tokens.
 * Feature 02 checks passed: `npm.cmd run lint` and `npm.cmd run build`.
 * Feature 02 layout update: editor navbar and project sidebar now frame routes from `app/layout.tsx`; `app/page.tsx` only owns page content.
+* Feature 03 implementation started: Clerk auth spec reviewed, Clerk current SDK path selected for `@clerk/nextjs` v7, and Next.js 16 proxy docs checked.
+* Feature 03 completed: `ClerkProvider` uses the Clerk dark theme with app CSS variables, `/sign-in` and `/sign-up` render Clerk forms in responsive two-panel auth pages, `/` redirects by auth state, `/editor` owns the editor shell, `proxy.ts` protects non-auth routes, and the editor navbar exposes Clerk's `UserButton`.
+* Feature 03 checks passed: `npm.cmd run lint` and `npm.cmd run build`.

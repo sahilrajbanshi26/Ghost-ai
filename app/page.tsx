@@ -1,7 +1,8 @@
-export default function Home() {
-  return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center">
-      <p className="text-sm text-muted-foreground">ghost ai</p>
-    </div>
-  )
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+
+export default async function Home() {
+  const { userId } = await auth()
+
+  redirect(userId ? "/editor" : "/sign-in")
 }
