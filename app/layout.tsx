@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             variables: {
               colorBackground: "var(--background)",
               colorForeground: "var(--foreground)",
-              colorPrimary: "var(--primary)",
+              colorPrimary: "var(--auth-accent)",
               borderRadius: "var(--radius)",
             },
             elements: {
@@ -43,7 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               socialButtonsBlockButton:
                 "border-border bg-secondary text-secondary-foreground hover:bg-accent",
               formButtonPrimary:
-                "bg-primary text-primary-foreground hover:bg-primary/90",
+                "bg-auth-accent text-background hover:bg-auth-accent/90",
               footerActionLink: "text-foreground hover:text-muted-foreground",
             },
           }}

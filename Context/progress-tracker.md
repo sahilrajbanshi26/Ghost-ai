@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-* Implement Clerk authentication, protected routes, auth redirects, and editor user account controls.
+* Feature 03 auth implementation complete; ready for Feature 04.
 
 ## Completed
 
@@ -44,4 +44,7 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 02 checks passed: `npm.cmd run lint` and `npm.cmd run build`.
 * Feature 02 layout update: editor navbar and project sidebar now frame routes from `app/layout.tsx`; `app/page.tsx` only owns page content.
 * Feature 03 implementation started: Clerk auth specification reviewed and existing Clerk environment keys confirmed.
-* Feature 03 completed: `ClerkProvider` uses the Clerk dark theme with app CSS variables, `/sign-in` and `/sign-up` render Clerk forms in responsive two-panel auth pages, `/` redirects by auth state, `/editor` owns the editor shell, `proxy.ts` protects non-auth routes, and the editor navbar exposes Clerk's `UserButton`.
+* Feature 03 completed: `ClerkProvider` uses the Clerk dark theme with app CSS variables, `/sign-in` and `/sign-up` render Clerk forms in responsive two-panel auth pages, `/` performs the auth-aware redirect, `/editor` owns the editor shell, `proxy.ts` protects all routes except the redirect and auth paths, and the editor navbar exposes Clerk's `UserButton`.
+* Feature 03 environment verification: existing Clerk keys are `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`; auth pages fall back to `/sign-in` and `/sign-up` because no custom route URL variables are configured.
+* Auth UI refinement completed: sign-in and sign-up now use an equal desktop split, a tokenized accent panel, and explicit Geist Sans/Mono typography tokens while preserving Clerk's default flows.
+* Auth inspiration pass completed: auth feature rows now use cyan Lucide icon badges, product-focused copy, and stronger headline hierarchy to match the provided reference interface.
