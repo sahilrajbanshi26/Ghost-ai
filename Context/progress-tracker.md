@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 05: Prisma Data Layer
+* Feature 07: Wire Editor Home
 
 ## Current Goal
 
-* Feature 05 Prisma data layer implementation complete; ready for the next feature.
+* Feature 07 editor home wiring complete; ready for the next feature.
 
 ## Completed
 
@@ -17,6 +17,8 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 03: Auth - Clerk provider, auth pages, protected routes, root redirects, editor shell route, and UserButton integration completed.
 * Feature 04: Project Dialogs - editor home prompt, mock owned/shared projects, create/rename/delete dialogs, live slug previews, sidebar actions, and mobile sidebar scrim completed.
 * Feature 05: Prisma Data Layer - project and collaborator models, Prisma client singleton, generated client, and first migration completed.
+* Feature 06: Project APIs - authenticated list/create/rename/delete REST endpoints with owner scoping and mutation authorization completed.
+* Feature 07: Wire Editor Home - server-loaded owned/shared projects, API-backed project actions, workspace navigation, and active-workspace deletion redirect completed.
 
 ## In Progress
 
@@ -58,3 +60,10 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 05 client setup completed: `lib/prisma.ts` selects Accelerate for `prisma+postgres://` URLs, otherwise uses `@prisma/adapter-pg`, and caches the client globally outside production.
 * Feature 05 checks passed: schema validation, formatting, client generation, and migration `20260826090427_add_projects` applied successfully.
 * Feature 05 build verification passed: `npm.cmd run build` completed after configuring Prisma 7 Accelerate with `accelerateUrl`.
+* Feature 06 implementation started: backend API specification reviewed and existing Clerk proxy, Prisma client, and Next.js route-handler conventions inspected.
+* Feature 06 completed: `/api/projects` supports owner-scoped GET/POST; `/api/projects/[projectId]` supports owner-checked PATCH/DELETE; missing names default to `Untitled Project`.
+* Feature 06 checks passed: `npm.cmd run build` and `npm.cmd run lint`; build exposes all four project API route handlers and TypeScript completes successfully.
+* Feature 07 implementation started: editor home mock state and layout boundary reviewed; server page and interactive shell responsibilities separated.
+* Feature 07 completed: `getProjectsForUser` loads owned projects and collaborator-email shared projects server-side; the client action hook handles API create, rename, delete, room previews, refreshes, and navigation.
+* Feature 07 workspace navigation completed: `/editor/[projectId]` validates owner/collaborator access and renders the selected project inside the editor shell, so create and sidebar navigation resolve to a real workspace route.
+* Feature 07 checks passed: `npm.cmd run build` and `npm.cmd run lint`; build exposes the project APIs and server-rendered `/editor` route with no TypeScript errors.
