@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 04: Project Dialogs
+* Feature 05: Prisma Data Layer
 
 ## Current Goal
 
-* Feature 04 project dialog implementation complete; ready for the next feature.
+* Feature 05 Prisma data layer implementation complete; ready for the next feature.
 
 ## Completed
 
@@ -16,6 +16,7 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 02: Editor Chrome - reusable editor navbar, floating project sidebar, page shell wiring, and dialog pattern styling completed.
 * Feature 03: Auth - Clerk provider, auth pages, protected routes, root redirects, editor shell route, and UserButton integration completed.
 * Feature 04: Project Dialogs - editor home prompt, mock owned/shared projects, create/rename/delete dialogs, live slug previews, sidebar actions, and mobile sidebar scrim completed.
+* Feature 05: Prisma Data Layer - project and collaborator models, Prisma client singleton, generated client, and first migration completed.
 
 ## In Progress
 
@@ -52,3 +53,8 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 04 implementation started: project dialog specification reviewed and existing editor shell, sidebar, and dialog primitives inspected.
 * Feature 04 completed: `useProjectDialogs` manages mock project data, dialog/form/loading state, and slug previews; create, rename, and delete flows are wired from the editor home and sidebar.
 * Feature 04 checks passed: focused ESLint completed without errors; repository lint and production build run after implementation.
+* Feature 05 implementation started: Prisma specification reviewed and existing Prisma 7 configuration and dependencies inspected.
+* Feature 05 completed: split `project.prisma` models define project status, Clerk owner IDs, collaborator relations, cascade deletion, timestamps, uniqueness, and requested indexes.
+* Feature 05 client setup completed: `lib/prisma.ts` selects Accelerate for `prisma+postgres://` URLs, otherwise uses `@prisma/adapter-pg`, and caches the client globally outside production.
+* Feature 05 checks passed: schema validation, formatting, client generation, and migration `20260826090427_add_projects` applied successfully.
+* Feature 05 build verification passed: `npm.cmd run build` completed after configuring Prisma 7 Accelerate with `accelerateUrl`.
