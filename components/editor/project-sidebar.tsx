@@ -1,34 +1,79 @@
-import { Plus, X } from "lucide-react"
+import { Pencil, Plus, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Project } from "@/components/editor/use-project-dialogs"
 import { cn } from "@/lib/utils"
 
 interface ProjectSidebarProps {
   isOpen: boolean
   onClose: () => void
+  projects: Project[]
+  onCreate: () => void
+  onRename: (project: Project) => void
+  onDelete: (project: Project) => void
 }
 
-function EmptyProjectState({ label }: { label: string }) {
+function ProjectList({
+  projects,
+  canManage,
+  onRename,
+  onDelete,
+}: {
+  projects: Project[]
+  canManage: boolean
+  onRename: (project: Project) => void
+  onDelete: (project: Project) => void
+}) {
+  if (!projects.length) {
+    return (
+      <div className="flex h-full min-h-64 items-center justify-center rounded-md border border-dashed p-6 text-center">
+        <p className="text-sm text-muted-foreground">No projects yet.</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex h-full min-h-64 items-center justify-center rounded-md border border-dashed p-6 text-center">
-      <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="space-y-1">
+      {projects.map((project) => (
+        <div className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent" key={project.id}>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{project.name}</p>
+            <p className="truncate text-xs text-muted-foreground">/{project.slug}</p>
+          </div>
+          {canManage && (
+            <div className="flex shrink-0">
+              <Button aria-label={`Rename ${project.name}`} size="icon" type="button" variant="ghost" onClick={() => onRename(project)}>
+                <Pencil />
+              </Button>
+              <Button aria-label={`Delete ${project.name}`} size="icon" type="button" variant="ghost" onClick={() => onDelete(project)}>
+                <Trash2 />
+              </Button>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }
 
-export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
+export function ProjectSidebar({ isOpen, onClose, projects, onCreate, onRename, onDelete }: ProjectSidebarProps) {
+  const ownedProjects = projects.filter((project) => !project.isShared)
+  const sharedProjects = projects.filter((project) => project.isShared)
+
   return (
-    <aside
-      aria-hidden={!isOpen}
-      className={cn(
-        "fixed bottom-0 left-0 top-14 z-30 flex w-80 max-w-[calc(100vw-1rem)] flex-col border-r bg-card shadow-xl transition-transform duration-200 ease-out",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}
-    >
+    <>
+      {isOpen && <button aria-label="Close sidebar" className="fixed inset-0 top-14 z-20 bg-background/60 md:hidden" type="button" onClick={onClose} />}
+      <aside
+        aria-hidden={!isOpen}
+        className={cn(
+          "fixed bottom-0 left-0 top-14 z-30 flex w-80 max-w-[calc(100vw-1rem)] flex-col border-r bg-card shadow-xl transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
       <div className="flex h-14 items-center justify-between border-b px-4">
         <h2 className="text-sm font-semibold">Projects</h2>
-        <Button
+          <Button
           aria-label="Close sidebar"
           size="icon"
           type="button"
@@ -49,19 +94,20 @@ export function ProjectSidebar({ isOpen, onClose }: ProjectSidebarProps) {
         </TabsList>
 
         <TabsContent className="min-h-0 flex-1" value="my-projects">
-          <EmptyProjectState label="No projects yet." />
+          <ProjectList projects={ownedProjects} canManage onRename={onRename} onDelete={onDelete} />
         </TabsContent>
         <TabsContent className="min-h-0 flex-1" value="shared">
-          <EmptyProjectState label="No shared projects yet." />
+          <ProjectList projects={sharedProjects} canManage={false} onRename={onRename} onDelete={onDelete} />
         </TabsContent>
       </Tabs>
 
       <div className="border-t p-4">
-        <Button className="w-full" type="button">
+        <Button className="w-full" type="button" onClick={onCreate}>
           <Plus className="h-4 w-4" />
           New Project
         </Button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }
