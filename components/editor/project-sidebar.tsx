@@ -1,17 +1,19 @@
 import { Pencil, Plus, Trash2, X } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { Project } from "@/components/editor/use-project-dialogs"
+import type { ProjectSummary } from "@/lib/projects"
 import { cn } from "@/lib/utils"
 
 interface ProjectSidebarProps {
   isOpen: boolean
   onClose: () => void
-  projects: Project[]
+  ownedProjects: ProjectSummary[]
+  sharedProjects: ProjectSummary[]
   onCreate: () => void
-  onRename: (project: Project) => void
-  onDelete: (project: Project) => void
+  onRename: (project: ProjectSummary) => void
+  onDelete: (project: ProjectSummary) => void
 }
 
 function ProjectList({
@@ -20,10 +22,10 @@ function ProjectList({
   onRename,
   onDelete,
 }: {
-  projects: Project[]
+  projects: ProjectSummary[]
   canManage: boolean
-  onRename: (project: Project) => void
-  onDelete: (project: Project) => void
+  onRename: (project: ProjectSummary) => void
+  onDelete: (project: ProjectSummary) => void
 }) {
   if (!projects.length) {
     return (
@@ -38,8 +40,8 @@ function ProjectList({
       {projects.map((project) => (
         <div className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-accent" key={project.id}>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{project.name}</p>
-            <p className="truncate text-xs text-muted-foreground">/{project.slug}</p>
+            <Link className="block truncate text-sm font-medium" href={`/editor/${project.id}`}>{project.name}</Link>
+            <p className="truncate text-xs text-muted-foreground">{project.status.toLowerCase()}</p>
           </div>
           {canManage && (
             <div className="flex shrink-0">
@@ -57,10 +59,7 @@ function ProjectList({
   )
 }
 
-export function ProjectSidebar({ isOpen, onClose, projects, onCreate, onRename, onDelete }: ProjectSidebarProps) {
-  const ownedProjects = projects.filter((project) => !project.isShared)
-  const sharedProjects = projects.filter((project) => project.isShared)
-
+export function ProjectSidebar({ isOpen, onClose, ownedProjects, sharedProjects, onCreate, onRename, onDelete }: ProjectSidebarProps) {
   return (
     <>
       {isOpen && <button aria-label="Close sidebar" className="fixed inset-0 top-14 z-20 bg-background/60 md:hidden" type="button" onClick={onClose} />}

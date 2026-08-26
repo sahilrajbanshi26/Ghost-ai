@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { ProjectDialog } from "@/components/editor/use-project-dialogs"
+import type { ProjectDialog } from "@/hooks/use-project-actions"
 
 interface ProjectDialogsProps {
   dialog: ProjectDialog
   projectName: string
-  slugPreview: string
+  roomIdPreview: string
   selectedProjectName?: string
   isLoading: boolean
+  error: string | null
   onProjectNameChange: (value: string) => void
   onClose: () => void
   onCreate: () => void
@@ -28,9 +29,10 @@ interface ProjectDialogsProps {
 export function ProjectDialogs({
   dialog,
   projectName,
-  slugPreview,
+  roomIdPreview,
   selectedProjectName,
   isLoading,
+  error,
   onProjectNameChange,
   onClose,
   onCreate,
@@ -60,13 +62,14 @@ export function ProjectDialogs({
                 placeholder="e.g. Mercury"
               />
               <p className="text-xs text-muted-foreground">
-                Slug preview: {slugPreview || "project-slug"}
+                Room ID preview: {roomIdPreview}
               </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
               <Button disabled={isLoading || !projectName.trim()} type="submit">Create project</Button>
             </DialogFooter>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </form>
         </DialogContent>
       </Dialog>
@@ -95,6 +98,7 @@ export function ProjectDialogs({
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
               <Button disabled={isLoading || !projectName.trim()} type="submit">Save changes</Button>
             </DialogFooter>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </form>
         </DialogContent>
       </Dialog>
@@ -113,6 +117,7 @@ export function ProjectDialogs({
               Delete project
             </Button>
           </DialogFooter>
+          {error && <p className="text-sm text-destructive">{error}</p>}
         </DialogContent>
       </Dialog>
     </>

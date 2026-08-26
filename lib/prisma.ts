@@ -9,11 +9,11 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is not configured")
 }
 
-const prisma = databaseUrl.startsWith("prisma+postgres://")
+const prisma = (databaseUrl.startsWith("prisma+postgres://")
   ? new PrismaClient({ accelerateUrl: databaseUrl }).$extends(withAccelerate())
   : new PrismaClient({
       adapter: new PrismaPg({ connectionString: databaseUrl }),
-    })
+    })) as unknown as PrismaClient
 
 const globalForPrisma = globalThis as unknown as {
   prisma: typeof prisma | undefined
