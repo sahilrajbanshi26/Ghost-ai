@@ -44,6 +44,7 @@ Creation accepts a display `name`. The response's `data.value` is the complete t
 ```typescript
 import { createManagementApiSdk, type TokenStorage } from '@prisma/management-api-sdk'
 
+// Pseudocode: replace these methods with durable, access-controlled secret storage.
 const tokenStorage: TokenStorage = {
   async getTokens() { return null },
   async setTokens(tokens) {},
@@ -56,6 +57,8 @@ const api = createManagementApiSdk({
   tokenStorage,
 })
 ```
+
+Do not use the no-op storage above in production: it loses refresh tokens on process exit. Persist tokens in the platform secret manager or an encrypted database record, scoped to the user and workspace, and protect the OAuth `state` and PKCE verifier until the callback completes.
 
 ## OAuth SDK flow
 

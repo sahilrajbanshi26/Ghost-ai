@@ -10,15 +10,16 @@ export interface ProjectSummary {
 }
 
 export async function getProjectsForUser(userId: string, email?: string) {
+  const normalizedEmail = email?.trim().toLowerCase()
   const [ownedProjects, sharedProjects] = await Promise.all([
     db.project.findMany({
       where: { ownerId: userId },
       orderBy: { createdAt: "desc" },
     }),
-    email
+    normalizedEmail
       ? db.project.findMany({
           where: {
-            collaborators: { some: { collaboratorEmail: email } },
+            collaborators: { some: { collaboratorEmail: normalizedEmail } },
           },
           orderBy: { createdAt: "desc" },
         })

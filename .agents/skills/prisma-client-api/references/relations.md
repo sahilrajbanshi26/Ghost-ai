@@ -256,6 +256,8 @@ const users = await prisma.user.findMany({
 })
 ```
 
+`every` also matches parents with no related records. Add `some: {}` when at least one related record is required.
+
 ### none
 
 None match:

@@ -38,7 +38,7 @@ prisma db execute --file ./script.sql
 ### Execute from stdin
 
 ```bash
-echo "TRUNCATE TABLE User;" | prisma db execute --stdin
+echo 'TRUNCATE TABLE "User";' | prisma db execute --stdin
 ```
 
 ### Execute `migrate diff` output
@@ -71,6 +71,8 @@ export default defineConfig({
 - **Data Maintenance**: Truncating tables, cleaning up data
 - **Schema Synchronization**: Applying `migrate diff` scripts
 - **Debugging**: Running test queries (though typically not for fetching data)
+
+Treat `db execute` as a destructive-capable command. Before running `DELETE`, `TRUNCATE`, `DROP`, or other destructive SQL, explain the affected data and obtain explicit user consent immediately before execution.
 
 ## Limitations
 

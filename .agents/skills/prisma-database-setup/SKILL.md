@@ -190,3 +190,5 @@ references/prisma-client-setup.md
 ## How to Use
 
 Choose the provider reference file for your database, then apply `references/prisma-client-setup.md` to complete client generation and adapter setup. For MongoDB, use `references/mongodb.md` instead of copying the SQL adapter examples or Prisma 7 config pattern.
+
+Keep schema and migration paths relative to the project/config location and resolve custom paths with Node's `path` and `fileURLToPath` APIs rather than string concatenation. Configure TLS with the provider's CA and verification enabled; do not use `rejectUnauthorized: false` in production. SQLite does not support Prisma enums or scalar lists, so model those values with supported scalar fields or lookup tables.

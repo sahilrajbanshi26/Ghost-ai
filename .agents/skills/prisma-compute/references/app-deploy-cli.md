@@ -355,7 +355,7 @@ bunx @prisma/cli@latest app list-deploys --json
 bunx @prisma/cli@latest app show-deploy <deployment-id> --json
 bunx @prisma/cli@latest app promote <deployment-id> --yes
 bunx @prisma/cli@latest app rollback --to <deployment-id> --yes
-bunx @prisma/cli@latest app remove --app my-api --yes
+bunx @prisma/cli@latest app remove --app my-api --confirm <app-id>
 ```
 
 Logs:

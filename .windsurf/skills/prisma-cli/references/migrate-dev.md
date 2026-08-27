@@ -121,17 +121,17 @@ prisma migrate dev --name add_created_at
 
 ### Handling data loss warnings
 
-When a migration would cause data loss:
+When a migration would cause data loss, stop and explain the exact impact. Obtain explicit user consent immediately before applying it; do not treat a flag or earlier message as consent:
 
 ```bash
 prisma migrate dev --name remove_field
 # Warning: You are about to delete data...
-# Accept with: --accept-data-loss
+# Only proceed after explicit consent and the current CLI's confirmed option surface.
 ```
 
 ## Shadow Database
 
-`migrate dev` requires a shadow database for drift detection. Configure in `prisma.config.ts`:
+`migrate dev` requires an isolated shadow database for drift detection. Never point it at the development or production database. Configure in `prisma.config.ts`:
 
 ```typescript
 export default defineConfig({

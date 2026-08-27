@@ -28,7 +28,7 @@ Do **not** use this skill when:
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20.19.0 or newer (required by Prisma 7)
 - A Prisma Postgres workspace (create one at https://console.prisma.io if needed)
 - A workspace service token (see `references/auth.md`)
 
@@ -97,17 +97,33 @@ The response is wrapped in `{ "data": { ... } }`. Extract:
 
 - `data.id` — the project ID (prefixed with `proj_`)
 - `data.database.id` — the database ID (prefixed with `db_`)
-- `data.database.connections[0].endpoints.direct.connectionString` — the direct PostgreSQL connection string
+- `data.database.connections[0].endpoints` — the available direct, pooled, or driver-specific connection endpoints
 
-Use the **direct** connection string (`endpoints.direct.connectionString`). Do not use the pooled or accelerate endpoints — those are for legacy Accelerate setups and not needed for new projects.
+Do not choose an endpoint yet. Follow Step 4 to select the application connection mode based on the runtime. Keep the direct endpoint available for migrations and administrative operations.
 
-If the response status is `provisioning`, wait a few seconds and poll `GET /v1/databases/<database-id>` until `status` is `ready`.
+If the response status is `provisioning`, poll `GET /v1/databases/<database-id>` with a bounded deadline and backoff:
 
-**If creation fails due to a database limit**, list the user's existing projects and present them as an interactive menu for deletion. After the user picks one, delete it and retry.
+- Set a maximum wait of 5 minutes.
+- Start with a 2-second delay and double it after each request, capped at 30 seconds.
+- Stop successfully when `status` is `ready`.
+- Stop and report an error immediately when `status` is `failed`, `cancelled`, or another terminal failure state.
+- If the deadline expires, report that provisioning timed out and include the last observed status. Do not continue polling indefinitely.
+
+**If creation fails due to a database limit**, list the user's existing projects and present them as an interactive menu. After the user selects a project, show its exact project ID and require a separate destructive confirmation that repeats that exact ID. Delete only after explicit confirmation; otherwise stop without deleting anything. Retry creation only after a confirmed deletion succeeds.
 
 Read `references/endpoints.md` for the full request/response shapes.
 
-### Step 4: Create a named connection (optional)
+### Step 4: Select the application connection mode
+
+Ask which runtime will use the database before choosing the application connection string:
+
+- **Long-lived server or local development:** direct TCP connection.
+- **Serverless or high-concurrency deployment:** pooled TCP connection, if the database response provides one.
+- **A supported Prisma serverless driver:** use the documented driver endpoint and adapter for that runtime.
+
+Use direct TCP for migrations and other administrative operations. Use the selected runtime mode for application traffic. Do not unconditionally put the direct endpoint in `DATABASE_URL` for a serverless or high-concurrency application. Record which endpoint was selected and verify that the chosen endpoint exists in the API response.
+
+### Step 5: Create a named connection (optional)
 
 If you need a dedicated connection (e.g., per-developer or per-environment), create one:
 
@@ -118,28 +134,30 @@ curl -s -X POST https://api.prisma.io/v1/databases/<database-id>/connections \
   -d '{ "name": "dev" }'
 ```
 
-Extract the direct connection string from `data.endpoints.direct.connectionString`.
+Extract the endpoint that matches the selected connection mode from `data.endpoints`. A named connection does not override the runtime connection-mode decision.
 
-### Step 5: Configure the local project
+### Step 6: Configure the local project
 
 1. Install dependencies:
 
 ```bash
-npm install prisma @prisma/client @prisma/adapter-pg pg dotenv
+npm install prisma@7.10.0 @prisma/client@7.10.0 @prisma/adapter-pg@7.10.0 pg dotenv
 ```
 
 All five packages are required:
-- `prisma` — CLI for migrations, schema push, client generation
-- `@prisma/client` — the generated query client
-- `@prisma/adapter-pg` — Prisma 7 driver adapter for direct PostgreSQL connections
+- `prisma@7.10.0` — CLI for migrations, schema push, and client generation
+- `@prisma/client@7.10.0` — the generated query client
+- `@prisma/adapter-pg@7.10.0` — Prisma 7 driver adapter for PostgreSQL connections
 - `pg` — Node.js PostgreSQL driver (used by the adapter)
 - `dotenv` — loads `.env` variables for `prisma.config.ts`
 
-2. Write the direct connection string to `.env`. **Append** to the file if it already exists — do not overwrite existing entries:
+2. Write the selected application connection string to `.env`. Replace an existing `DATABASE_URL` assignment in place while preserving every other entry. If no `DATABASE_URL` exists, add exactly one assignment. Never append a second `DATABASE_URL` key. Preserve comments and unrelated variables where possible:
 
 ```
-DATABASE_URL="<direct-connection-string>"
+DATABASE_URL="<selected-application-connection-string>"
 ```
+
+Use a structured dotenv editor or an equivalent line-based update that recognizes `DATABASE_URL` assignments, including optional whitespace and quoting. After writing, verify that the file contains exactly one active `DATABASE_URL` assignment and that its value is the selected endpoint.
 
 3. Verify `.gitignore` includes `.env`. Create `.gitignore` if it does not exist. Warn the user if `.env` is not gitignored.
 
@@ -163,20 +181,21 @@ import { defineConfig } from 'prisma/config'
 import 'dotenv/config'
 
 export default defineConfig({
-  earlyAccess: true,
-  schema: path.join(import.meta.dirname, 'prisma', 'schema.prisma'),
+  schema: path.join(fileURLToPath(new URL('.', import.meta.url)), 'prisma', 'schema.prisma'),
   datasource: {
     url: process.env.DATABASE_URL!,
   },
 })
 ```
 
+Add `import { fileURLToPath } from 'node:url'` when using the `fileURLToPath` form above.
+
 **Important Prisma 7 notes:**
 - Connection URLs go in `prisma.config.ts`, never in `schema.prisma`
 - The provider in `schema.prisma` must be `"postgresql"` (not `"prismaPostgres"`)
 - `dotenv/config` must be imported in `prisma.config.ts` to load `.env` variables
 
-### Step 6: Define schema and push
+### Step 7: Define schema and push
 
 If the schema already has models, skip to pushing. Otherwise, **present these options as an interactive menu**:
 
@@ -184,17 +203,18 @@ If the schema already has models, skip to pushing. Otherwise, **present these op
 2. **"Give me a starter schema"** — Add a Blog starter schema (User, Post, Comment with relations) to `prisma/schema.prisma`. Show the user what was added and ask if they want to adjust it before pushing.
 3. **"I'll describe what I need"** — Ask the user to describe their data model in natural language (e.g., "I'm building a task manager with projects, tasks, and team members"). Generate a schema from the description, show it, and ask for confirmation before pushing.
 
-Once the schema has models and the user is ready, create a migration and generate the client:
+Once the schema has models and the user is ready, create a migration and explicitly generate the client:
 
 ```bash
 npx prisma migrate dev --name init
+npx prisma generate
 ```
 
-This creates migration files in `prisma/migrations/` **and** generates the client in one step. Migration history is essential for CI/CD workflows (`prisma migrate deploy`) and production deployments.
+This creates migration files in `prisma/migrations/`. Prisma 7 does not guarantee client generation as a separate follow-up step, so always run `npx prisma generate` explicitly before importing the generated client. Migration history is essential for CI/CD workflows (`prisma migrate deploy`) and production deployments.
 
 Only use `npx prisma db push` if the user explicitly asks for prototyping-only mode (no migration history). In that case, follow it with `npx prisma generate`.
 
-### Step 7: Verify the connection
+### Step 8: Verify the connection
 
 After generating the client, create and run a quick verification script to confirm everything works end-to-end. This is **critical** — do not skip this step.
 
@@ -206,7 +226,11 @@ import pg from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from './generated/prisma/client.js'
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30_000,
+})
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 

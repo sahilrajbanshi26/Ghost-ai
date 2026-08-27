@@ -27,13 +27,13 @@ Outputs details about your Prisma environment, including:
 
 ## Example Output
 
-```
-prisma               : 7.3.0
-@prisma/client       : 7.3.0
-Operating System     : darwin
-Architecture         : arm64
-Node.js              : v20.10.0
-TypeScript           : 5.3.3
+```text
+prisma               : 7.9.1
+@prisma/client       : 7.9.1
+Operating System     : <os>
+Architecture         : <arch>
+Node.js              : <version>
+TypeScript           : <version>
 Query Compiler       : enabled
 PSL                  : ...
 Schema Engine        : ...

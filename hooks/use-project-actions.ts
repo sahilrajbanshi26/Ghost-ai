@@ -81,8 +81,9 @@ export function useProjectActions() {
       if (!response.ok) throw new Error("Unable to create project")
 
       const project: ProjectSummary = await response.json()
+      const roomId = project.id
       closeDialog()
-      router.push(`/editor/${project.id}`)
+      router.push(`/editor/${roomId}`)
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Unable to create project")
     } finally {

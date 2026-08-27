@@ -21,7 +21,10 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         { ownerId: user.id },
         {
           collaborators: {
-            some: { collaboratorEmail: user.primaryEmailAddress?.emailAddress ?? "" },
+            some: {
+              collaboratorEmail:
+                user.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? "",
+            },
           },
         },
       ],
@@ -36,8 +39,8 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
   )
 
   return (
-    <EditorShell ownedProjects={ownedProjects} sharedProjects={sharedProjects}>
-      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-6 text-center">
+    <EditorShell ownedProjects={ownedProjects} sharedProjects={sharedProjects} projectId={project.id} isOwner={project.ownerId === user.id} workspaceTitle={project.name}>
+      <div className="workspace-grid flex min-h-[calc(100vh-5rem)] items-center justify-center px-6 text-center">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
           <p className="text-sm text-muted-foreground">Architecture workspace</p>

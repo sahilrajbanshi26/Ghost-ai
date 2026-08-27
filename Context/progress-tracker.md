@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 07: Wire Editor Home
+* Feature 09: Share Dialog
 
 ## Current Goal
 
-* Feature 07 editor home wiring complete; ready for the next feature.
+* Feature 09 share dialog implementation complete; ready for the next feature.
 
 ## Completed
 
@@ -19,6 +19,8 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 05: Prisma Data Layer - project and collaborator models, Prisma client singleton, generated client, and first migration completed.
 * Feature 06: Project APIs - authenticated list/create/rename/delete REST endpoints with owner scoping and mutation authorization completed.
 * Feature 07: Wire Editor Home - server-loaded owned/shared projects, API-backed project actions, workspace navigation, and active-workspace deletion redirect completed.
+* Feature 08: Editor Workspace Shell - verified server project loading, interactive project actions, workspace routing, and dialog/sidebar integration completed.
+* Feature 09: Share Dialog - owner-managed collaborator invites/removals, Clerk-enriched collaborator display, read-only collaborator access, and project link copying completed.
 
 ## In Progress
 
@@ -67,3 +69,17 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 07 completed: `getProjectsForUser` loads owned projects and collaborator-email shared projects server-side; the client action hook handles API create, rename, delete, room previews, refreshes, and navigation.
 * Feature 07 workspace navigation completed: `/editor/[projectId]` validates owner/collaborator access and renders the selected project inside the editor shell, so create and sidebar navigation resolve to a real workspace route.
 * Feature 07 checks passed: `npm.cmd run build` and `npm.cmd run lint`; build exposes the project APIs and server-rendered `/editor` route with no TypeScript errors.
+* Feature 08 review completed: the supplied workspace-shell specification matches the existing implementation from Feature 07, so no duplicate UI or API code was added.
+* Feature 08 behavior confirmed: the database-created project ID is used for workspace navigation and remains the identifier available for the future Liveblocks room; the dialog also previews a slugified name with a short suffix.
+* Feature 08 refinement completed: create now permits an empty name so the API can apply its `Untitled Project` default, and the returned project ID is explicitly used as the workspace room ID.
+* Feature 08 checks passed: production build and TypeScript diagnostics completed successfully; repository lint has only the existing skill-template warning.
+* Feature 08 visual refinement completed: editor shell now follows the reference workspace composition with a floating rounded project drawer, title/action navbar, graph-paper canvas, teal/purple accents, and responsive AI Copilot rail.
+* Feature 08 visual checks passed: production build and focused diagnostics are clean; local preview is auth-gated by Clerk.
+* Visual comparison refinement completed: the Projects drawer now opens by default on desktop to match the supplied reference first viewport while remaining closed on mobile after hydration.
+* Visual comparison follow-up completed: responsive sidebar state now uses `useSyncExternalStore`, keeping the reference desktop composition without synchronous effect updates or hydration issues.
+* Feature 09 implementation started: share dialog specification reviewed against the existing workspace navbar, Prisma collaborator relation, and Clerk server client.
+* Feature 09 completed: workspace Share opens a collaborator dialog; owners can invite/remove collaborators, collaborators receive read-only access, links provide temporary `Copied!` feedback, and collaborator records are enriched from Clerk when available.
+* Feature 09 checks passed: `npm.cmd run build` and TypeScript diagnostics; lint has no implementation errors and only the existing skill-template warning.
+* Full feature-chain audit completed: specifications 01-09 are connected across Clerk auth, Prisma data, project APIs, server-rendered editor loading, client mutations, workspace navigation, and collaborator sharing.
+* Audit fixes completed: collaborator access now normalizes email casing consistently, Share remains available on mobile workspaces, and share-dialog state is isolated per workspace without synchronous effect resets.
+* Full audit verification passed: `npm.cmd run build`, TypeScript diagnostics, and ESLint with zero implementation errors; one pre-existing warning remains in the Clerk skill template.

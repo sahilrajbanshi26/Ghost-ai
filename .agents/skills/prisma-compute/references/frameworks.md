@@ -98,6 +98,8 @@ Do not set `HOSTNAME=localhost` or `HOSTNAME=127.0.0.1` in deploy env. If the st
 
 ## Hono
 
+Hono is a framework, not a runtime. For a Node deployment, use `@hono/node-server` and deploy the Node-compatible Hono entrypoint through the supported Hono strategy. For a Bun deployment, use the Bun runtime entrypoint and `--framework bun` (or the generated Hono configuration after verifying it). Do not assume a Node Hono server can run under Bun or that a Bun entrypoint is valid for a Node artifact.
+
 Deploy shape:
 
 ```bash

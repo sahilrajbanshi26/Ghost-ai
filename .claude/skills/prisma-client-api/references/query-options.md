@@ -29,9 +29,25 @@ const user = await prisma.user.findUnique({
     posts: {
       select: {
         title: true,
-        published: true
+## cursor
       }
+Cursor-based pagination:
     }
+```typescript
+// First page
+const firstPage = await prisma.user.findMany({
+  take: 10,
+  orderBy: { id: 'asc' }
+})
+
+// Next page using cursor
+const nextPage = await prisma.user.findMany({
+  take: 10,
+  skip: 1,  // Skip the cursor record
+  cursor: { id: firstPage[firstPage.length - 1].id },
+  orderBy: { id: 'asc' }
+})
+```
   }
 })
 ```
@@ -255,6 +271,8 @@ const nextPage = await prisma.user.findMany({
   orderBy: { id: 'asc' }
 })
 ```
+
+Use a deterministic, unique `orderBy` (for example, `createdAt` plus `id`) when paginating. Treat cursors as opaque values, and use `skip: 1` when the cursor row should not repeat on the next page.
 
 ## distinct
 
