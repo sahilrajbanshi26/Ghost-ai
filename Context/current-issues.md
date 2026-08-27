@@ -25,4 +25,6 @@ fix the drag and drop functionality
 - Production build passed after isolating stale persisted room storage under the `diagram` key.
 - Production build passed after isolating stale persisted room storage under the `canvas` key.
 - Starter and dropped node movement now use the same sized custom renderer.
+- Custom node movement is enabled by keeping the React Flow draggable node body free of the `nodrag` class; moved positions continue through the collaborative flow change handler.
+- The Shape panel now shows a delete X action whenever canvas nodes are selected; deletion uses the Liveblocks Flow handler so collaborators receive the removal.
 - The only known lint output is the pre-existing warning in the Clerk skill template.
