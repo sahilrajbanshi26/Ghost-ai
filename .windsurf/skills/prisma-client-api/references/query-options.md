@@ -29,25 +29,9 @@ const user = await prisma.user.findUnique({
     posts: {
       select: {
         title: true,
-## cursor
+        published: true
       }
-Cursor-based pagination:
     }
-```typescript
-// First page
-const firstPage = await prisma.user.findMany({
-  take: 10,
-  orderBy: { id: 'asc' }
-})
-
-// Next page using cursor
-const nextPage = await prisma.user.findMany({
-  take: 10,
-  skip: 1,  // Skip the cursor record
-  cursor: { id: firstPage[firstPage.length - 1].id },
-  orderBy: { id: 'asc' }
-})
-```
   }
 })
 ```

@@ -67,8 +67,8 @@ export function ProjectSidebar({ isOpen, onClose, ownedProjects, sharedProjects,
         aria-hidden={!isOpen}
         inert={!isOpen}
         className={cn(
-          "fixed bottom-2 left-2 top-16 z-30 flex w-[306px] max-w-[calc(100vw-1rem)] flex-col rounded-3xl border bg-card shadow-2xl transition-transform duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed bottom-4 left-4 top-[4.5rem] z-30 flex w-[306px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border bg-card/95 shadow-2xl backdrop-blur transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+2rem)]"
         )}
       >
       <div className="flex h-14 items-center justify-between border-b px-4">

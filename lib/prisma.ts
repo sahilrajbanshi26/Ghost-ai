@@ -3,7 +3,10 @@ import { withAccelerate } from "@prisma/extension-accelerate"
 
 import { PrismaClient } from "@/app/generated/prisma/client"
 
-const databaseUrl = process.env.DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL?.replace(
+  /([?&])sslmode=(?:prefer|require|verify-ca)(?=&|$|")/i,
+  "$1sslmode=verify-full"
+)
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined

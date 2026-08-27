@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 09: Share Dialog
+* Feature 12: Shapes Panel
 
 ## Current Goal
 
-* Feature 09 share dialog implementation complete; ready for the next feature.
+* Feature 12 draggable shapes panel implementation complete; ready for the next feature.
 
 ## Completed
 
@@ -21,6 +21,8 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 07: Wire Editor Home - server-loaded owned/shared projects, API-backed project actions, workspace navigation, and active-workspace deletion redirect completed.
 * Feature 08: Editor Workspace Shell - verified server project loading, interactive project actions, workspace routing, and dialog/sidebar integration completed.
 * Feature 09: Share Dialog - owner-managed collaborator invites/removals, Clerk-enriched collaborator display, read-only collaborator access, and project link copying completed.
+* Feature 10: Liveblocks Setup - typed presence and user metadata, cached Node client, deterministic cursor colors, private project rooms, authenticated project-scoped sessions, and a realtime React Flow canvas with synchronized project blocks and collaborator cursors completed.
+* Feature 12: Shapes Panel - floating draggable shape toolbar, shape payload sizes, canvas drop handling, custom canvas nodes, and timestamped shape node IDs completed.
 
 ## In Progress
 
@@ -83,3 +85,18 @@ Update this file whenever the current phase, active feature, or implementation s
 * Full feature-chain audit completed: specifications 01-09 are connected across Clerk auth, Prisma data, project APIs, server-rendered editor loading, client mutations, workspace navigation, and collaborator sharing.
 * Audit fixes completed: collaborator access now normalizes email casing consistently, Share remains available on mobile workspaces, and share-dialog state is isolated per workspace without synchronous effect resets.
 * Full audit verification passed: `npm.cmd run build`, TypeScript diagnostics, and ESLint with zero implementation errors; one pre-existing warning remains in the Clerk skill template.
+* Feature 10 implementation started: Liveblocks specification reviewed against the existing Clerk authentication and project access helper.
+* Feature 10 checks passed: TypeScript, ESLint, and production build completed; `/api/liveblocks-auth` is wired to the workspace canvas. Add `LIVEBLOCKS_SECRET_KEY` to exercise the live provider integration locally.
+* Feature 10 layout correction completed: the workspace now visibly contains Projects, synchronized project blocks, and AI Copilot as three functional panels.
+* Feature 10 visual correction completed: the Projects panel now participates in the desktop grid, the React Flow canvas fills its column with stable viewport sizing, and mobile keeps the sidebar overlay behavior.
+* Feature 10 canvas block refinement completed: the synchronized canvas now has its own dedicated panel with a header, sync status, and independently sized React Flow content area.
+* Feature 12 implementation started: shapes-panel specification reviewed against the existing Liveblocks React Flow canvas.
+* Feature 12 checks passed: TypeScript, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 12 runtime fix completed: wrapped the Liveblocks canvas with ReactFlowProvider so useReactFlow() has the required provider ancestor.
+* Feature 12 storage runtime fix completed: initialized RoomProvider with a LiveObject storage root and nested flow LiveObject so React Flow mutations can access flow.get()/flow.get("nodes").
+* Feature 12 canvas review completed: canvas now fills the viewport naturally, Projects and AI Copilot float over it, the closed Projects panel fully exits the viewport, and drag/drop behavior is documented and preserved.
+* Feature 12 drag/drop repair completed: added a browser-compatible fallback payload, strict payload validation, propagation control, and reliable screen-to-flow node placement.
+* Feature 12 Liveblocks drop runtime fix completed: removed the plain flow storage seed so useLiveblocksFlow initializes the required LiveObject tree and flow.get() works during node insertion.
+* Feature 12 persisted-room compatibility fix completed: moved React Flow storage to the fresh `canvas` key so existing rooms bypass malformed legacy data.
+* Feature 12 movement refinement completed: normalized starter node dimensions and added explicit grab/grabbing affordances to the custom canvas nodes.
+* Hydration fix completed: Clerk UserButton now loads client-only in the editor navbar to prevent server/client markup mismatch.

@@ -1,7 +1,11 @@
-import { UserButton } from "@clerk/nextjs"
+import dynamic from "next/dynamic"
 import { Bot, PanelLeftClose, PanelLeftOpen, Share2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+
+const UserButton = dynamic(() => import("@clerk/nextjs").then((module) => module.UserButton), {
+  ssr: false,
+})
 
 interface EditorNavbarProps {
   isSidebarOpen: boolean

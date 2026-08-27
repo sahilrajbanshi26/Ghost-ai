@@ -6,6 +6,8 @@ import { ProjectDialogs } from "@/components/editor/project-dialogs"
 import { ShareDialog } from "@/components/editor/share-dialog"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
+import { LiveCanvas } from "@/components/editor/live-canvas"
+import { CanvasBlock } from "@/components/editor/canvas-block"
 import { useProjectActions } from "@/hooks/use-project-actions"
 import type { ProjectSummary } from "@/lib/projects"
 import { Bot, Sparkles } from "lucide-react"
@@ -53,26 +55,26 @@ export function EditorShell({ ownedProjects, sharedProjects, children, workspace
           isCopilotOpen={isCopilotOpen}
           onCopilotToggle={() => setIsCopilotOpen((isOpen) => !isOpen)}
       />
-      <ProjectSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => {
-          if (isMobile) {
-            setIsMobileSidebarOpen(false)
-          } else {
-            setIsDesktopSidebarOpen(false)
-          }
-        }}
-        ownedProjects={ownedProjects}
-        sharedProjects={sharedProjects}
-        onCreate={projectActions.openCreate}
-        onRename={projectActions.openRename}
-        onDelete={projectActions.openDelete}
-      />
-
-      <main className="min-h-screen px-2 pb-2 pt-16 md:px-4 md:pb-4">
-        <div className="grid min-h-[calc(100vh-5rem)] gap-2 lg:grid-cols-[minmax(0,1fr)_316px]">
-          <section className="workspace-canvas relative min-h-[calc(100vh-5rem)] overflow-hidden rounded-3xl border bg-card">
-            {children ?? (
+      <main className="h-screen overflow-hidden pt-14">
+        <div className="relative h-[calc(100vh-3.5rem)] min-h-0">
+          <ProjectSidebar
+            isOpen={isSidebarOpen}
+            onClose={() => {
+              if (isMobile) {
+                setIsMobileSidebarOpen(false)
+              } else {
+                setIsDesktopSidebarOpen(false)
+              }
+            }}
+            ownedProjects={ownedProjects}
+            sharedProjects={sharedProjects}
+            onCreate={projectActions.openCreate}
+            onRename={projectActions.openRename}
+            onDelete={projectActions.openDelete}
+          />
+          <div className="h-full min-h-0">
+            <CanvasBlock projectName={workspaceTitle}>
+              {projectId ? <LiveCanvas roomId={projectId} projectName={workspaceTitle ?? "Untitled Workspace"} /> : children ?? (
           <div className="flex h-full min-h-[calc(100vh-5rem)] flex-col items-center justify-center gap-4 px-6 text-center">
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold tracking-tight">Create a project or open an existing one</h1>
@@ -82,9 +84,10 @@ export function EditorShell({ ownedProjects, sharedProjects, children, workspace
               New Project
             </button>
           </div>
-            )}
-          </section>
-          {isCopilotOpen && <aside className="hidden min-h-[calc(100vh-5rem)] flex-col overflow-hidden rounded-3xl border bg-card lg:flex">
+              )}
+            </CanvasBlock>
+          </div>
+          {isCopilotOpen && <aside className="fixed bottom-4 right-4 top-[4.5rem] z-30 hidden w-[316px] flex-col overflow-hidden rounded-2xl border bg-card/95 shadow-2xl backdrop-blur lg:flex">
             <div className="flex h-16 items-center justify-between border-b px-5">
               <div>
                 <h2 className="text-sm font-semibold">AI Copilot</h2>

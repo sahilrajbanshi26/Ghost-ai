@@ -110,6 +110,19 @@
   .workspace-grid {
     animation: workspace-enter 500ms ease-out both;
   }
+
+  .workspace-canvas .react-flow {
+    height: 100%;
+    width: 100%;
+  }
+
+  .workspace-canvas .react-flow__pane {
+    cursor: grab;
+  }
+
+  .workspace-canvas .react-flow__pane:active {
+    cursor: grabbing;
+  }
 }
 
 @keyframes workspace-enter {
