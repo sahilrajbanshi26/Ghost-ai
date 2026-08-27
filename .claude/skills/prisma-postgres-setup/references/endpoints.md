@@ -110,9 +110,9 @@ Key field to extract:
 
 - `data.database.connections[0].endpoints.direct.connectionString` → use as `DATABASE_URL`
 
-The response also includes `pooled` and `accelerate` endpoints — ignore these for new projects. The direct connection string is all you need.
+The response may also include `pooled` and `accelerate` endpoints. Select the endpoint that matches the application runtime: direct TCP for long-lived servers and migrations, pooled TCP for serverless or high-concurrency traffic, and an Accelerate endpoint only with the Accelerate client extension. Keep the direct endpoint available for migrations and administrative operations.
 
-If `data.database.status` is `provisioning`, poll `GET /v1/databases/{id}` until `status` is `ready`.
+If `data.database.status` is `provisioning`, poll `GET /v1/databases/{id}` with a bounded deadline and backoff until `status` is `ready`; stop and report terminal failure states instead of polling indefinitely.
 
 ## Get database
 
@@ -196,7 +196,7 @@ Creates a new named connection string for a database. Use for per-developer or p
 }
 ```
 
-Extract: `data.endpoints.direct.connectionString` → use as `DATABASE_URL`.
+Select and extract the endpoint matching the application runtime from `data.endpoints`; use the direct endpoint for migrations and administrative operations.
 
 ## Delete database
 

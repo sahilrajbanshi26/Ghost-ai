@@ -66,7 +66,7 @@ prisma generate
 
 - **Prototyping** - Rapid schema iteration
 - **Local development** - Quick schema changes
-- **MongoDB** - Primary workflow (migrations not supported)
+- **MongoDB on Prisma ORM 6.x** - Primary workflow (migrations not supported)
 - **Testing** - Setting up test databases
 
 ## When NOT to Use
@@ -86,9 +86,9 @@ prisma generate
 | Rollback capability | No | Yes |
 | Best for | Prototyping | Development |
 
-## MongoDB Workflow
+## MongoDB Workflow (Prisma ORM 6.x only)
 
-MongoDB doesn't support migrations. Use `db push` exclusively:
+MongoDB doesn't support migrations in Prisma ORM 6.x. Prisma ORM 7 has no MongoDB connector; use Prisma Next guidance for that separate migration.
 
 ```bash
 # Schema changes for MongoDB
@@ -116,6 +116,8 @@ prisma generate
 
 ### Reset and start fresh
 
+The following reset is destructive. Explain the data loss and obtain explicit consent immediately before running it; do not infer consent from this example.
+
 ```bash
 prisma db push --force-reset
 prisma db seed
@@ -125,7 +127,7 @@ prisma db seed
 
 If `db push` can't apply changes safely:
 
-```
+```text
 Error: The following changes cannot be applied:
   - Removing field `email` would cause data loss
   
@@ -143,8 +145,11 @@ prisma db push --accept-data-loss
 When ready for production, switch to migrations:
 
 ```bash
-# Create baseline migration from current schema
-prisma migrate dev --name init
+# Generate a baseline migration from the current schema, then review it
+mkdir -p prisma/migrations/0_init
+prisma migrate diff --from-empty --to-schema-datamodel ./prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql
+# After review, record the existing database as already at this baseline
+prisma migrate resolve --applied 0_init
 ```
 
 Then use `migrate dev` for future changes.

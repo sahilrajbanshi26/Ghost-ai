@@ -5,7 +5,7 @@ Prisma 7 changed how PrismaClient connects to databases. The CLI (`prisma db pus
 ## Required packages
 
 ```bash
-npm install @prisma/client @prisma/adapter-pg pg
+npm install prisma@7.9.1 @prisma/client@7.9.1 @prisma/adapter-pg@7.9.1 pg dotenv tsx
 ```
 
 - `@prisma/adapter-pg` — the Prisma adapter for the `pg` PostgreSQL driver
@@ -16,10 +16,12 @@ npm install @prisma/client @prisma/adapter-pg pg
 ```typescript
 import 'dotenv/config'
 import pg from 'pg'
+import type { PoolConfig } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from './generated/prisma/client.js'
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
+const poolConfig: PoolConfig = { connectionString: process.env.DATABASE_URL }
+const pool = new pg.Pool(poolConfig)
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 ```
@@ -66,10 +68,16 @@ await prisma.post.update({
 // Delete
 await prisma.post.delete({ where: { id: 1 } })
 
-// Cleanup
-await prisma.$disconnect()
-await pool.end()
+// Cleanup in the application's shutdown path
+try {
+  // application work
+} finally {
+  await prisma.$disconnect()
+  await pool.end()
+}
 ```
+
+Use the direct TCP URL for local development, migrations, and other long-lived server connections. Use the provider's pooled endpoint for serverless or high-concurrency application traffic when one is supplied. Run local TypeScript verification scripts with `npx tsx script.ts` (or the project's package-manager equivalent).
 
 ## Common mistakes
 

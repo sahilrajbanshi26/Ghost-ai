@@ -21,7 +21,7 @@ Create a hook in `hooks/` that manages dialog state and project mutations.
 - call `POST /api/projects`
 - navigate to the new workspace
 
-The project ID and Liveblocks room ID should stay aligned.
+The slugified name and suffix are preview-only. Use the API-generated `project.id` as the canonical workspace and Liveblocks room ID after creation so the identifiers cannot diverge.
 
 **Rename**
 

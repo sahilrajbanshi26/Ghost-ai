@@ -66,21 +66,11 @@ const adapter = new PrismaPg({
 
 For migrations, you may need a direct database connection:
 
-### Option 1: Use Accelerate URL for everything
-
-Accelerate URLs work with Prisma CLI commands:
-
-```bash
-# Works with Accelerate URL
-prisma migrate deploy
-prisma db push
-```
-
-### Option 2: Use direct URL for migrations
+### Use a direct URL for migrations
 
 ```env
 DATABASE_URL="prisma+postgres://..."  # For app
-DIRECT_DATABASE_URL="postgresql://..."  # For migrations
+DIRECT_DATABASE_URL="postgresql://..."  # For migrations and administrative CLI commands
 ```
 
 ```typescript

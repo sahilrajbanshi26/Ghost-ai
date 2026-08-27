@@ -254,3 +254,11 @@ where: {
   }
 }
 ```
+
+## Provider-specific constraints
+
+- `isSet` is for optional MongoDB fields; it is not a general SQL null test. Use `null` or `not: null` for SQL nullable columns.
+- Scalar-list filters (`has`, `hasSome`, `hasEvery`, `isEmpty`) require a provider that supports scalar lists; SQLite does not.
+- JSON path filters and operators differ by provider. Confirm the generated type and provider reference before using `path`, `array_contains`, `string_contains`, or `string_starts_with`.
+- Full-text `search` requires the provider's full-text support and the required `@@fulltext` index; it is not portable across all providers.
+- Case-insensitive `mode` is not supported uniformly. Check the provider and collation before relying on it.

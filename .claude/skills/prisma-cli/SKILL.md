@@ -155,8 +155,8 @@ prisma migrate deploy
 # Check migration status
 prisma migrate status
 
-# Compare schemas and generate diff
-prisma migrate diff --from-config-datasource --to-schema schema.prisma --script
+# Compare the configured database with the schema and generate a diff
+prisma migrate diff --from-config-datasource --to-schema ./prisma/schema.prisma --script
 ```
 
 ### Utility Commands
@@ -237,7 +237,7 @@ import 'dotenv/config'
 
 See individual rule files for detailed command documentation:
 
-```
+```text
 references/init.md           - Project initialization
 references/generate.md       - Client generation
 references/dev.md            - Local development database

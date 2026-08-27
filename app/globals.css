@@ -95,3 +95,37 @@
     @apply bg-background font-sans text-foreground;
   }
 }
+
+@layer components {
+  .workspace-canvas {
+    background-color: oklch(0.145 0.012 210);
+    background-image:
+      linear-gradient(oklch(0.32 0.025 210 / 14%) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.32 0.025 210 / 14%) 1px, transparent 1px),
+      radial-gradient(circle at 50% 20%, oklch(0.28 0.045 210 / 28%), transparent 42%),
+      radial-gradient(circle at 88% 90%, oklch(0.24 0.055 285 / 20%), transparent 32%);
+    background-size: 34px 34px, 34px 34px, auto, auto;
+  }
+
+  .workspace-grid {
+    animation: workspace-enter 500ms ease-out both;
+  }
+
+  .workspace-canvas .react-flow {
+    height: 100%;
+    width: 100%;
+  }
+
+  .workspace-canvas .react-flow__pane {
+    cursor: grab;
+  }
+
+  .workspace-canvas .react-flow__pane:active {
+    cursor: grabbing;
+  }
+}
+
+@keyframes workspace-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

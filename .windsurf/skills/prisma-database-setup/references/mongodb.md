@@ -53,6 +53,11 @@ model Post {
   author   User   @relation(fields: [authorId], references: [id])
   authorId String @db.ObjectId
 }
+
+model User {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  posts Post[]
+}
 ```
 
 ## 2. Environment Variable

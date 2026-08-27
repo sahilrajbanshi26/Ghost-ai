@@ -15,6 +15,8 @@ bunx create-prisma@latest --version
 
 Use `create-prisma@latest` for new-project scaffolding.
 
+The `--provider` option selects the generated Prisma datasource provider; it does not select a Compute deploy framework or prove that the resulting app is deployable. Verify the installed CLI's `--help` output and the generated package/config before using provider-specific options.
+
 ## Supported Templates
 
 `create-prisma@latest` scaffolds `hono`, `elysia`, `nest`, `next`, `svelte`, `astro`, `nuxt`, `tanstack-start`, and `turborepo`.

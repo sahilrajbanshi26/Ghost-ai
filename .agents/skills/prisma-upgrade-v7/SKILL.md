@@ -4,7 +4,7 @@ description: Complete migration guide from Prisma ORM v6 to v7 covering all brea
 license: MIT
 metadata:
   author: prisma
-  version: "7.6.0"
+  version: "7.9.1"
 ---
 
 # Upgrade to Prisma ORM 7
@@ -52,7 +52,7 @@ Prisma 7 has no MongoDB connector. Do not apply any step in this guide to a proj
 - **MongoDB projects should stay on Prisma 6.x or migrate to Prisma Next** - do not migrate MongoDB apps to Prisma 7's SQL client path (see `prisma-mongodb-upgrade`)
 - **Node.js 20.19.0+** required
 - **TypeScript 5.4.0+** required
-- **Latest stable Prisma ORM version**: `7.6.0`
+- **Version used by these examples**: `7.9.1`; verify the current release and pin compatible `prisma`, `@prisma/client`, adapter, and driver versions together.
 
 ## Upgrade Steps Overview
 
@@ -71,11 +71,11 @@ Prisma 7 has no MongoDB connector. Do not apply any step in this guide to a proj
 
 ```bash
 # Update packages
-npm install @prisma/client@7
-npm install -D prisma@7
+npm install @prisma/client@7.9.1
+npm install -D prisma@7.9.1
 
 # Install a driver adapter (PostgreSQL or Prisma Postgres via direct TCP)
-npm install @prisma/adapter-pg pg
+npm install @prisma/adapter-pg@7.9.1 pg
 
 # Install dotenv for env loading
 npm install dotenv
@@ -195,7 +195,7 @@ npm install @prisma/adapter-ppg @prisma/ppg
 npm install @prisma/adapter-neon
 ```
 
-MongoDB does not have a SQL `@prisma/adapter-*` package in the published Prisma 7.6.0 packages. If you're upgrading a MongoDB project, stop and keep that project on the latest Prisma 6.x release instead of following the standard Prisma 7 migration path.
+MongoDB does not have a SQL `@prisma/adapter-*` package in the Prisma 7.9.1 SQL workflow. If you're upgrading a MongoDB project, stop and keep that project on the latest Prisma 6.x release instead of following the standard Prisma 7 migration path.
 
 ### 6. Update client instantiation
 
@@ -241,8 +241,8 @@ npx prisma migrate dev  # if needed
 - Ensure `prisma generate` ran successfully
 
 ### SSL certificate errors
-- Add `ssl: { rejectUnauthorized: false }` to the adapter config if you need to preserve old behavior
-- Or configure your certificates properly with `NODE_EXTRA_CA_CERTS` / OpenSSL CA settings
+- Do not disable certificate verification in production. Configure the provider CA with `NODE_EXTRA_CA_CERTS` or the driver's verified CA settings.
+- Do not disable certificate verification as a workaround; only use a temporary local diagnostic when it is explicitly approved and isolated from production.
 
 ### Connection timeout issues
 - Driver adapters use the underlying driver's defaults, which differ from v6

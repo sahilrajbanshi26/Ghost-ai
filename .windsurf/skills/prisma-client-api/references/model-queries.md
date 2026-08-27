@@ -54,6 +54,8 @@ const user = await prisma.user.findFirst({
 })
 ```
 
+`findUnique` and `findFirst` return `null` when no record matches. Use the corresponding `OrThrow` method when absence should be an exception.
+
 ### findFirstOrThrow
 
 ```typescript
@@ -121,6 +123,8 @@ const result = await prisma.user.createMany({
 })
 // Returns { count: 2 }
 ```
+
+`createMany` returns a count and does not return created records. `skipDuplicates` is provider-dependent; check the generated type and database support before using it.
 
 ### createManyAndReturn
 

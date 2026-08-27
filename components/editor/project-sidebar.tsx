@@ -65,9 +65,10 @@ export function ProjectSidebar({ isOpen, onClose, ownedProjects, sharedProjects,
       {isOpen && <button aria-label="Close sidebar" className="fixed inset-0 top-14 z-20 bg-background/60 md:hidden" type="button" onClick={onClose} />}
       <aside
         aria-hidden={!isOpen}
+        inert={!isOpen}
         className={cn(
-          "fixed bottom-0 left-0 top-14 z-30 flex w-80 max-w-[calc(100vw-1rem)] flex-col border-r bg-card shadow-xl transition-transform duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed bottom-4 left-4 top-[4.5rem] z-30 flex w-[306px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border bg-card/95 shadow-2xl backdrop-blur transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+2rem)]"
         )}
       >
       <div className="flex h-14 items-center justify-between border-b px-4">

@@ -67,7 +67,7 @@ export function ProjectDialogs({
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-              <Button disabled={isLoading || !projectName.trim()} type="submit">Create project</Button>
+              <Button disabled={isLoading} type="submit">Create project</Button>
             </DialogFooter>
             {error && <p className="text-sm text-destructive">{error}</p>}
           </form>

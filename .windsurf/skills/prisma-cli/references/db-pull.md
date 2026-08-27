@@ -13,7 +13,7 @@ prisma db pull [options]
 - Connects to your database
 - Reads the database schema (tables, columns, relations, indexes)
 - Updates `schema.prisma` with corresponding Prisma models
-- For MongoDB, samples data to infer schema
+- For MongoDB on Prisma ORM, use the classic Prisma 6.x workflow; MongoDB introspection is not part of the Prisma 7 SQL CLI path
 
 ## Options
 
@@ -169,7 +169,7 @@ After `db pull`, consider:
 
 ## MongoDB Introspection
 
-For MongoDB, `db pull` samples documents to infer schema:
+For MongoDB projects that remain on Prisma ORM 6.x, `db pull` samples documents to infer schema:
 
 ```bash
 prisma db pull

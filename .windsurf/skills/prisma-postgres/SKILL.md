@@ -97,6 +97,8 @@ For CI or other non-interactive environments:
 prisma postgres link --api-key "<your-api-key>" --database "db_..."
 ```
 
+`PRISMA_API_KEY` is a legacy environment name used by older Prisma Postgres link workflows. Prefer the current `--api-key` input or the credential name documented by the installed CLI, and never print its value.
+
 This flow updates your local `.env` with `DATABASE_URL`, then you can run `prisma generate` and `prisma migrate dev`.
 
 ### 4. Programmatic provisioning with Management API

@@ -256,6 +256,8 @@ const nextPage = await prisma.user.findMany({
 })
 ```
 
+Use a deterministic, unique `orderBy` (for example, `createdAt` plus `id`) when paginating. Treat cursors as opaque values, and use `skip: 1` when the cursor row should not repeat on the next page.
+
 ## distinct
 
 Return unique values:

@@ -114,6 +114,8 @@ const result = await prisma.$executeRawUnsafe(
 )
 ```
 
+Never interpolate user-controlled identifiers or SQL fragments. Validate dynamic identifiers against a closed allowlist and parameterize values; prefer `$queryRaw`/`$executeRaw` tagged templates. The `Unsafe` methods are only appropriate after the query shape has been constructed from trusted, validated pieces.
+
 ## SQL Injection Prevention
 
 ### Safe (parameterized)
@@ -180,7 +182,9 @@ PostgreSQL returns BigInt for COUNT:
 const result = await prisma.$queryRaw<[{ count: bigint }]>`
   SELECT COUNT(*) as count FROM "User"
 `
-const count = Number(result[0].count)
+const count = result[0].count <= BigInt(Number.MAX_SAFE_INTEGER)
+  ? Number(result[0].count)
+  : result[0].count
 ```
 
 ### Date handling
