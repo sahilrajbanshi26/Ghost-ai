@@ -1,4 +1,14 @@
 @import "tailwindcss";
+
+.canvas-handle-group {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.react-flow__node:hover .canvas-handle-group,
+.react-flow__node.selected .canvas-handle-group {
+  opacity: 1;
+}
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

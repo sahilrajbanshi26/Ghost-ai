@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 12: Shapes Panel
+* Project Completed
 
 ## Current Goal
 
-* Feature 12 draggable shapes panel implementation complete; ready for the next feature.
+* All features (up to Feature 17) are completed, tested, and verified.
 
 ## Completed
 
@@ -23,6 +23,11 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 09: Share Dialog - owner-managed collaborator invites/removals, Clerk-enriched collaborator display, read-only collaborator access, and project link copying completed.
 * Feature 10: Liveblocks Setup - typed presence and user metadata, cached Node client, deterministic cursor colors, private project rooms, authenticated project-scoped sessions, and a realtime React Flow canvas with synchronized project blocks and collaborator cursors completed.
 * Feature 12: Shapes Panel - floating draggable shape toolbar, shape payload sizes, canvas drop handling, custom canvas nodes, and timestamped shape node IDs completed.
+* Feature 13: Node Shapes - CSS rectangle, pill, and circle rendering; scalable SVG diamond, hexagon, and cylinder rendering; selected-state borders; and cursor-attached drag previews completed.
+* Feature 14: Node Editor - selected-node resize handles with minimum dimensions, centered inline textarea label editing, empty-label placeholders, Escape/blur exit behavior, and Liveblocks-synchronized updates completed.
+* Feature 15: Node Colour - selected-node swatch toolbar, predefined background/text color pairs, active swatch state, controlled text-color hover glow, and Liveblocks-synchronized color updates completed.
+* Feature 16: Edge Behavior - four-way hover handles, smooth-step arrowed custom edges, wider invisible edge hit areas, and collaborative inline edge labels completed.
+* Feature 17: Canvas Ergonomics & Starter Templates - animated zoom/fit controls, Liveblocks undo/redo controls, editable-field-aware keyboard shortcuts, minimap removal, and pre-built diagram starter templates library with SVG previews completed.
 
 ## In Progress
 
@@ -30,7 +35,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-* Next feature (TBD)
+* None.
 
 ## Open Questions
 
@@ -100,3 +105,19 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 12 persisted-room compatibility fix completed: moved React Flow storage to the fresh `canvas` key so existing rooms bypass malformed legacy data.
 * Feature 12 movement refinement completed: normalized starter node dimensions and added explicit grab/grabbing affordances to the custom canvas nodes.
 * Hydration fix completed: Clerk UserButton now loads client-only in the editor navbar to prevent server/client markup mismatch.
+* Feature 13 implementation started: node-shapes specification reviewed against the existing collaborative React Flow renderer and shape toolbar.
+* Feature 13 checks passed: TypeScript, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 13 color refinement completed: each shape now has a distinct fill and border color, with stronger borders on selected nodes and matching colors for SVG and CSS renderers.
+* Feature 13 deletion refinement completed: the Shape panel now reveals an accessible X action for selected nodes and deletes them through the synchronized Liveblocks Flow handler.
+* Feature 14 implementation started: node-editor specification reviewed against the existing custom renderer and Liveblocks Flow change handler.
+* Feature 14 checks passed: TypeScript, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 13 movement fix completed: removed the `nodrag` class from the custom node body so React Flow position dragging works and Liveblocks persists moved node positions.
+* Feature 15 implementation started: node-colour specification reviewed against the existing theme tokens, custom shape renderer, and Liveblocks node replacement mutation.
+* Feature 15 checks passed: TypeScript, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 16 implementation started: edge-behavior specification reviewed against the existing React Flow and Liveblocks canvas.
+* Feature 16 implementation completed: four-way hover handles, smooth-step arrowed custom edges, wider invisible edge hit areas, and collaborative inline edge labels added.
+* Feature 16 checks passed: TypeScript diagnostics, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 17 implementation started: canvas ergonomics specification reviewed against the existing React Flow and Liveblocks history APIs.
+* Feature 17 implementation completed: animated zoom/fit controls, Liveblocks undo/redo controls, editable-field-aware keyboard shortcuts, and minimap removal added; the specification file was deleted as requested.
+* Feature 17 checks passed: TypeScript diagnostics, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
+* Feature 17 starter templates completed: five technical architecture templates, calculated SVG previews, scrollable import dialog, and fresh-ID Liveblocks imports added.
