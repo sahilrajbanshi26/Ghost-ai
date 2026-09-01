@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 20: Canvas Autosave & Blob Persistence in Progress
+* Feature 21: Design Agent API & Trigger Wiring Complete
 
 ## Current Goal
 
-* Persist per-project canvas state to Vercel Blob, restore it only when the room is effectively empty, and expose the save state in the editor while preserving active collaboration.
+* Add the backend design-generation trigger flow, persist run metadata in Prisma, and return run-scoped access tokens without yet adding AI generation logic.
 
 ## Completed
 
@@ -124,3 +124,4 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 18: Presence Avatars & Live Cursors completed: collaborator stacks, current-user filtering, overflow badges, live cursor overlays, and the updated `thinking` presence field are wired into the canvas view while leaving the global editor navbar unchanged.
 * Feature 19: AI Sidebar Shell completed: the floating AI panel now uses a dedicated sidebar component with the `AI Workspace` header, `AI Architect`/`Specs` tabs, starter prompt composer, empty-state coaching, and demo specification card while preserving the existing right-side slide-in behavior and editor shell state.
 * Feature 20: Canvas autosave and blob persistence in progress: Vue-safe canvas save/load API routes are in place, the editor tracks save status, and project state is now persisted with Vercel Blob while skipping restore when the Liveblocks room already contains active collaborative changes.
+* Feature 21: Design agent backend flow implemented: `/api/ai/design` triggers the background design task and stores `TaskRun` metadata; `/api/ai/design/token` validates ownership and emits a scoped public token; `trigger/design-agent.ts` defines the minimal design task that logs its input; and the Prisma model relation is wired into the project schema.
