@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Project Completed
+* Feature 20: Canvas Autosave & Blob Persistence in Progress
 
 ## Current Goal
 
-* All features (up to Feature 17) are completed, tested, and verified.
+* Persist per-project canvas state to Vercel Blob, restore it only when the room is effectively empty, and expose the save state in the editor while preserving active collaboration.
 
 ## Completed
 
@@ -121,3 +121,6 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 17 implementation completed: animated zoom/fit controls, Liveblocks undo/redo controls, editable-field-aware keyboard shortcuts, and minimap removal added; the specification file was deleted as requested.
 * Feature 17 checks passed: TypeScript diagnostics, ESLint, and production build completed; only the existing Clerk skill-template warning remains.
 * Feature 17 starter templates completed: five technical architecture templates, calculated SVG previews, scrollable import dialog, and fresh-ID Liveblocks imports added.
+* Feature 18: Presence Avatars & Live Cursors completed: collaborator stacks, current-user filtering, overflow badges, live cursor overlays, and the updated `thinking` presence field are wired into the canvas view while leaving the global editor navbar unchanged.
+* Feature 19: AI Sidebar Shell completed: the floating AI panel now uses a dedicated sidebar component with the `AI Workspace` header, `AI Architect`/`Specs` tabs, starter prompt composer, empty-state coaching, and demo specification card while preserving the existing right-side slide-in behavior and editor shell state.
+* Feature 20: Canvas autosave and blob persistence in progress: Vue-safe canvas save/load API routes are in place, the editor tracks save status, and project state is now persisted with Vercel Blob while skipping restore when the Liveblocks room already contains active collaborative changes.

@@ -1,8 +1,10 @@
 "use client"
 
+import { useUser } from "@clerk/nextjs"
 import { LiveblocksProvider, RoomProvider, useCanRedo, useCanUndo, useMyPresence, useOthers, useRedo, useStatus, useUndo } from "@liveblocks/react"
 import { useLiveblocksFlow } from "@liveblocks/react-flow"
-import { createContext, useContext, useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 import {
   Background,
   BaseEdge,
@@ -24,6 +26,7 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react"
 import { Circle, Cylinder, Diamond, Hexagon, LayoutTemplate, Maximize, Minus, Pill, Plus, RectangleHorizontal, Redo2, Undo2, X } from "lucide-react"
+import { useCanvasAutosave, type CanvasSaveStatus } from "@/hooks/use-canvas-autosave"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
@@ -32,6 +35,8 @@ import "@xyflow/react/dist/style.css"
 interface LiveCanvasProps {
   roomId: string
   projectName: string
+  onSaveStatusChange?: (status: CanvasSaveStatus) => void
+  onSaveRef?: (saveNow: () => Promise<void>) => void
 }
 
 export type CanvasShape = "rectangle" | "diamond" | "circle" | "pill" | "cylinder" | "hexagon"
@@ -55,6 +60,55 @@ const shapeDefinitions: ShapeDefinition[] = [
   { name: "cylinder", label: "Cylinder", width: 160, height: 120, icon: Cylinder, fillColor: "#052e16", borderColor: "#4ade80" },
   { name: "hexagon", label: "Hexagon", width: 180, height: 110, icon: Hexagon, fillColor: "#172554", borderColor: "#60a5fa" },
 ]
+
+const UserButton = dynamic(() => import("@clerk/nextjs").then((module) => module.UserButton), {
+  ssr: false,
+})
+
+function getInitials(displayName: string) {
+  const parts = displayName.trim().split(/\s+/).filter((part): part is string => Boolean(part))
+  if (!parts.length) return "?"
+  return parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("") || "?"
+}
+
+type CollaboratorUser = {
+  id: string
+  info: {
+    displayName?: string | null
+    avatarUrl?: string | null
+    cursorColor?: string | null
+  }
+  presence: {
+    cursor: { x: number; y: number } | null
+    thinking: boolean
+  }
+  connectionId: number
+}
+
+function CollaboratorAvatar({ user, isThinking }: { user: CollaboratorUser; isThinking?: boolean }) {
+  const displayName = user.info.displayName || "Collaborator"
+  const hasAvatar = Boolean(user.info.avatarUrl)
+  const hasCursor = Boolean(user.presence.cursor)
+  const statusLabel = isThinking ? "Thinking..." : hasCursor ? "Viewing" : "Online"
+
+  return (
+    <div className="relative group" title={`${displayName} · ${statusLabel}`}>
+      <div
+        className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-background/80 bg-slate-800 text-[10px] font-semibold text-slate-100 shadow-sm ring-2 ring-background/70 transition-all duration-200"
+        style={{ backgroundColor: user.info.cursorColor || "#334155" }}
+      >
+        {hasAvatar ? <img alt={displayName} className="h-full w-full object-cover" src={user.info.avatarUrl ?? undefined} /> : <span>{getInitials(displayName)}</span>}
+        {(isThinking || hasCursor) && (
+          <span
+            aria-label={statusLabel}
+            className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-slate-950/80 shadow-sm"
+            style={{ backgroundColor: isThinking ? "#fbbf24" : user.info.cursorColor || "#22d3ee" }}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
 
 export interface ProjectBlockData extends Record<string, unknown> {
   label: string
@@ -286,7 +340,7 @@ function CanvasEdge({ id, source, target, sourceHandleId, targetHandleId, source
 const nodeTypes = { canvasNode: CanvasNode }
 const edgeTypes = { canvasEdge: CanvasEdge }
 
-function ShapeToolbar({ selectedNodes, onDelete, onTemplates }: { selectedNodes: ProjectBlock[]; onDelete: (params: { nodes: ProjectBlock[]; edges: never[] }) => void; onTemplates: () => void }) {
+function ShapeToolbar({ selectedNodes, selectedEdges, onDelete, onTemplates }: { selectedNodes: ProjectBlock[]; selectedEdges: ProjectEdge[]; onDelete: (params: { nodes: ProjectBlock[]; edges: ProjectEdge[] }) => void; onTemplates: () => void }) {
   const [preview, setPreview] = useState<{ shape: ShapeDefinition; x: number; y: number } | null>(null)
 
   function handleDragStart(event: React.DragEvent<HTMLButtonElement>, shape: ShapeDefinition) {
@@ -324,7 +378,7 @@ function ShapeToolbar({ selectedNodes, onDelete, onTemplates }: { selectedNodes:
           </button>
         )
       })}
-      {selectedNodes.length > 0 && (
+      {(selectedNodes.length > 0 || selectedEdges.length > 0) && (
         <>
           <div className="mx-1 h-5 w-px bg-border" />
           <button
@@ -333,7 +387,7 @@ function ShapeToolbar({ selectedNodes, onDelete, onTemplates }: { selectedNodes:
             title="Delete selected shapes"
             type="button"
             onPointerDown={(event) => event.stopPropagation()}
-            onClick={() => onDelete({ nodes: selectedNodes, edges: [] })}
+            onClick={() => onDelete({ nodes: selectedNodes, edges: selectedEdges })}
           >
             <X className="h-4 w-4" />
           </button>
@@ -383,12 +437,23 @@ function CanvasControls<NodeType extends Node>({ flow, canUndo, canRedo, undo, r
   )
 }
 
-function PresenceAndFlow({ projectName }: { projectName: string }) {
+function PresenceAndFlow({ projectName, projectId, onSaveStatusChange, onSaveRef }: { projectName: string; projectId: string; onSaveStatusChange?: (status: CanvasSaveStatus) => void; onSaveRef?: (saveNow: () => Promise<void>) => void }) {
   const [presence, updatePresence] = useMyPresence()
   const others = useOthers()
+  const { user } = useUser()
+  const tabIdRef = useRef<string>(typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`)
+  const currentUserId = user?.id
+  const visibleCollaborators = others.filter((other) => {
+    if (other.id !== currentUserId) return true
+    return other.presence.tabId !== tabIdRef.current
+  })
   const status = useStatus()
   const reactFlow = useReactFlow<ProjectBlock>()
   const { screenToFlowPosition } = reactFlow
+
+  useEffect(() => {
+    updatePresence({ tabId: tabIdRef.current })
+  }, [updatePresence])
   const undo = useUndo()
   const redo = useRedo()
   const canUndo = useCanUndo()
@@ -398,7 +463,50 @@ function PresenceAndFlow({ projectName }: { projectName: string }) {
     storageKey: "canvas",
     nodes: { initial: initialNodes },
   })
+  const { saveNow } = useCanvasAutosave({
+    projectId,
+    nodes: flow.nodes,
+    edges: flow.edges,
+    isLoading: flow.isLoading,
+    onSaveStatusChange,
+    onSaveRef,
+  })
   useKeyboardShortcuts({ flow: reactFlow, undo, redo })
+
+  useEffect(() => {
+    if (!projectId || flow.isLoading) return
+
+    const shouldRestoreSavedCanvas = flow.nodes.length <= initialNodes.length && flow.edges.length === 0 && flow.nodes.every((node) => initialNodes.some((initialNode) => initialNode.id === node.id))
+    if (!shouldRestoreSavedCanvas) return
+
+    let cancelled = false
+
+    async function loadSavedCanvas() {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/canvas`)
+        if (!response.ok) return
+
+        const payload = await response.json()
+        const savedNodes = Array.isArray(payload?.nodes) ? payload.nodes : []
+        const savedEdges = Array.isArray(payload?.edges) ? payload.edges : []
+        if (cancelled || (!savedNodes.length && !savedEdges.length)) return
+
+        if (savedNodes.length) {
+          flow.onNodesChange(savedNodes.map((node: ProjectBlock) => ({ type: "replace", id: node.id, item: node })))
+        }
+        if (savedEdges.length) {
+          flow.onEdgesChange(savedEdges.map((edge: ProjectEdge) => ({ type: "replace", id: edge.id, item: edge })))
+        }
+      } catch (error) {
+        console.error("Failed to load saved canvas", error)
+      }
+    }
+
+    void loadSavedCanvas()
+    return () => {
+      cancelled = true
+    }
+  }, [flow.edges, flow.isLoading, flow.nodes, projectId])
 
   function handleDrop(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault()
@@ -447,18 +555,27 @@ function PresenceAndFlow({ projectName }: { projectName: string }) {
     })) as never)
     setIsTemplatesOpen(false)
   }
-  if (flow.isLoading) {
+  if (flow.isLoading || !flow.nodes) {
     return <div className="flex h-full min-h-0 items-center justify-center text-sm text-muted-foreground">Loading collaborative canvas...</div>
+  }
+
+  const selectedNodes = (flow.nodes ?? []).filter((node) => node.selected)
+  const selectedEdges = (flow.edges ?? []).filter((edge) => edge.selected)
+
+  const handleDeleteSelected = () => {
+    if (!selectedNodes.length && !selectedEdges.length) return
+
+    if (selectedNodes.length) {
+      flow.onNodesChange(selectedNodes.map((node) => ({ type: "remove", id: node.id })))
+    }
+    if (selectedEdges.length) {
+      flow.onEdgesChange(selectedEdges.map((edge) => ({ type: "remove", id: edge.id })))
+    }
   }
 
   return (
     <div
       className="relative h-full min-h-0 w-full bg-background/40"
-      onPointerLeave={() => updatePresence({ cursor: null })}
-      onPointerMove={(event) => {
-        const bounds = event.currentTarget.getBoundingClientRect()
-        updatePresence({ cursor: { x: event.clientX - bounds.left, y: event.clientY - bounds.top } })
-      }}
       onDragOver={(event) => {
         event.preventDefault()
         event.dataTransfer.dropEffect = "copy"
@@ -472,6 +589,28 @@ function PresenceAndFlow({ projectName }: { projectName: string }) {
           {others.length ? ` · ${others.length} collaborator${others.length === 1 ? "" : "s"} online` : ""}
         </p>
       </div>
+
+      <div className="absolute right-5 top-5 z-30 flex items-center gap-2">
+        {visibleCollaborators.length > 0 && (
+          <div className="flex items-center">
+            {visibleCollaborators.slice(0, 5).map((other, index) => (
+              <div key={other.id} className={index > 0 ? "-ml-2" : ""}>
+                <CollaboratorAvatar isThinking={Boolean(other.presence.thinking)} user={other} />
+              </div>
+            ))}
+            {visibleCollaborators.length > 5 && (
+              <div className="-ml-2 flex h-8 w-8 items-center justify-center rounded-full border border-background/80 bg-slate-800 text-[10px] font-semibold text-slate-100 ring-2 ring-background/70">
+                +{visibleCollaborators.length - 5}
+              </div>
+            )}
+          </div>
+        )}
+        {visibleCollaborators.length > 0 && <div className="h-7 w-px bg-border/80" />}
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border/60 bg-background/80 shadow-sm backdrop-blur-sm">
+          <UserButton appearance={{ elements: { userButtonBox: "h-8 w-8", userButtonTrigger: "h-8 w-8" } }} />
+        </div>
+      </div>
+
       <NodeChangesContext.Provider value={flow.onNodesChange}>
         <EdgeChangesContext.Provider value={flow.onEdgesChange as OnEdgesChange<ProjectEdge>}>
         <svg aria-hidden="true" className="absolute h-0 w-0">
@@ -488,33 +627,69 @@ function PresenceAndFlow({ projectName }: { projectName: string }) {
         nodeTypes={nodeTypes}
         nodes={flow.nodes}
         edges={flow.edges}
+        onMouseLeave={() => updatePresence({ tabId: tabIdRef.current, cursor: null })}
+        onMouseMove={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect()
+          updatePresence({ tabId: tabIdRef.current, cursor: { x: event.clientX - bounds.left, y: event.clientY - bounds.top } })
+        }}
         onNodesChange={flow.onNodesChange}
         onEdgesChange={flow.onEdgesChange}
         onConnect={(connection) => flow.onEdgesChange([{ type: "add", item: { ...connection, id: `edge-${Date.now()}`, type: "canvasEdge", data: { label: "" } } } as never])}
-        onDelete={flow.onDelete}
+        onDelete={handleDeleteSelected}
         colorMode="dark"
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#334155" gap={28} size={1} />
+        {visibleCollaborators.map((other) => {
+          const cursor = other.presence.cursor
+          if (!cursor) return null
+
+          const badgeText = other.presence.thinking ? "Thinking..." : "Viewing"
+
+          return (
+            <div key={other.connectionId} className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2" style={{ left: cursor.x, top: cursor.y }}>
+              <div className="relative flex items-start gap-2">
+                <div className="h-4 w-4 rotate-45 rounded-[3px] border border-slate-950/80 shadow-[0_0_12px_rgba(15,23,42,0.6)]" style={{ backgroundColor: other.info.cursorColor || "#22d3ee" }} />
+                <div className="inline-flex items-center gap-1 rounded-full border border-slate-950/80 px-2 py-0.5 text-[10px] font-medium text-slate-950 shadow-sm" style={{ backgroundColor: other.info.cursorColor || "#22d3ee" }}>
+                  <span>{other.info.displayName || "Collaborator"}</span>
+                  {other.presence.thinking && <span className="text-[9px] font-semibold uppercase tracking-[0.16em] opacity-75">{badgeText}</span>}
+                </div>
+              </div>
+            </div>
+          )
+        })}
         </ReactFlow>
           </EdgeChangesContext.Provider>
       </NodeChangesContext.Provider>
-      <ShapeToolbar onTemplates={() => setIsTemplatesOpen(true)} selectedNodes={flow.nodes.filter((node) => node.selected)} onDelete={flow.onDelete} />
+      <ShapeToolbar onTemplates={() => setIsTemplatesOpen(true)} selectedNodes={selectedNodes} selectedEdges={selectedEdges} onDelete={handleDeleteSelected} />
       <StarterTemplatesModal open={isTemplatesOpen} onImport={importTemplate} onOpenChange={setIsTemplatesOpen} />
       <CanvasControls flow={reactFlow} canRedo={canRedo} canUndo={canUndo} redo={redo} undo={undo} />
-      <button className="absolute bottom-20 left-5 z-10 rounded-md border bg-card/90 px-3 py-2 text-xs text-muted-foreground backdrop-blur hover:bg-accent" type="button" onClick={() => updatePresence({ isThinking: !presence.isThinking })}>
-        {presence.isThinking ? "Thinking..." : "Set thinking status"}
+      <button className="absolute bottom-20 left-5 z-10 rounded-md border bg-card/90 px-3 py-2 text-xs text-muted-foreground backdrop-blur hover:bg-accent" type="button" onClick={() => updatePresence({ tabId: tabIdRef.current, thinking: !presence.thinking })}>
+        {presence.thinking ? "Thinking..." : "Set thinking status"}
+      </button>
+      <button className="absolute bottom-20 right-5 z-10 rounded-md border bg-card/90 px-3 py-2 text-xs text-muted-foreground backdrop-blur hover:bg-accent" type="button" onClick={() => void saveNow()}>
+        Save now
       </button>
     </div>
   )
 }
 
-export function LiveCanvas({ roomId, projectName }: LiveCanvasProps) {
+export function LiveCanvas({ roomId, projectName, onSaveStatusChange, onSaveRef }: LiveCanvasProps) {
+  const { user, isLoaded } = useUser()
+
+  if (!isLoaded) {
+    return <div className="flex h-full min-h-0 items-center justify-center text-sm text-muted-foreground">Loading workspace...</div>
+  }
+
+  if (!user) {
+    return <div className="flex h-full min-h-0 items-center justify-center text-sm text-muted-foreground">Sign in to open this workspace.</div>
+  }
+
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider id={roomId} initialPresence={{ cursor: null, isThinking: false }} initialStorage={{} as never}>
+      <RoomProvider key={`${roomId}-${user.id}`} id={roomId} initialPresence={{ cursor: null, thinking: false, tabId: "" }} initialStorage={{} as never}>
         <ReactFlowProvider>
-          <PresenceAndFlow projectName={projectName} />
+          <PresenceAndFlow projectId={roomId} projectName={projectName} onSaveStatusChange={onSaveStatusChange} onSaveRef={onSaveRef} />
         </ReactFlowProvider>
       </RoomProvider>
     </LiveblocksProvider>
