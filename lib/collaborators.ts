@@ -2,7 +2,7 @@ import { clerkClient } from "@clerk/nextjs/server"
 
 import { db } from "@/lib/prisma"
 
-export async function getProjectAccess(projectId: string, userId: string, email?: string) {
+export async function getProjectAccess(projectId: string, userId: string, emails?: string | string[]) {
   const project = await db.project.findUnique({
     where: { id: projectId },
     include: { collaborators: true },
@@ -10,13 +10,21 @@ export async function getProjectAccess(projectId: string, userId: string, email?
 
   if (!project) return null
 
+  const emailList = Array.isArray(emails)
+    ? emails
+    : typeof emails === "string"
+      ? [emails]
+      : []
+
+  const normalizedEmails = new Set(
+    emailList
+      .map((email) => email?.trim().toLowerCase())
+      .filter((email): email is string => Boolean(email))
+  )
+
   const isOwner = project.ownerId === userId
-  const normalizedEmail = email?.trim().toLowerCase()
-  const isCollaborator = Boolean(
-    normalizedEmail &&
-      project.collaborators.some(
-        (collaborator) => collaborator.collaboratorEmail.toLowerCase() === normalizedEmail
-      )
+  const isCollaborator = project.collaborators.some((collaborator) =>
+    normalizedEmails.has(collaborator.collaboratorEmail.toLowerCase())
   )
 
   return { project, isOwner, isCollaborator, canView: isOwner || isCollaborator }

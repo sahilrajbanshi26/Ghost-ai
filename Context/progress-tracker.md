@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 20: Canvas Autosave & Blob Persistence in Progress
+* Feature 24: AI runtime configuration and design-flow validation in progress
 
 ## Current Goal
 
-* Persist per-project canvas state to Vercel Blob, restore it only when the room is effectively empty, and expose the save state in the editor while preserving active collaboration.
+* Remove the configuration blockers affecting the Google AI key and live Trigger/Liveblocks runtime, then verify the sidebar and design task can start and report real statuses without silent failures.
 
 ## Completed
 
@@ -31,11 +31,13 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-* None.
+* Feature 24: the room-scoped `ai-chat` feed and `ai-status-feed` remain separate, and the frontend is guarded so it only listens to a real run when both a run ID and public token are present.
+* Feature 23: the AI worker now fails with a clear runtime error if the Google key is missing, instead of silently producing broken behavior.
+* Feature 22: Trigger.dev and Liveblocks runtime readiness are being validated in the local environment so the design agent can publish actual room updates and canvas mutations.
 
 ## Next Up
 
-* None.
+* Verify the local app and Trigger worker start cleanly in a real runtime context and confirm the prompt-to-run-to-canvas flow produces visible status updates and diagram changes.
 
 ## Open Questions
 
@@ -124,3 +126,4 @@ Update this file whenever the current phase, active feature, or implementation s
 * Feature 18: Presence Avatars & Live Cursors completed: collaborator stacks, current-user filtering, overflow badges, live cursor overlays, and the updated `thinking` presence field are wired into the canvas view while leaving the global editor navbar unchanged.
 * Feature 19: AI Sidebar Shell completed: the floating AI panel now uses a dedicated sidebar component with the `AI Workspace` header, `AI Architect`/`Specs` tabs, starter prompt composer, empty-state coaching, and demo specification card while preserving the existing right-side slide-in behavior and editor shell state.
 * Feature 20: Canvas autosave and blob persistence in progress: Vue-safe canvas save/load API routes are in place, the editor tracks save status, and project state is now persisted with Vercel Blob while skipping restore when the Liveblocks room already contains active collaborative changes.
+* Feature 21: Design agent backend flow implemented: `/api/ai/design` triggers the background design task and stores `TaskRun` metadata; `/api/ai/design/token` validates ownership and emits a scoped public token; `trigger/design-agent.ts` defines the minimal design task that logs its input; and the Prisma model relation is wired into the project schema.

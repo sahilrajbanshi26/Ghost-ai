@@ -43,6 +43,12 @@ export function useCanvasAutosave<TNode extends Node, TEdge extends Edge>({
         throw new Error(errorText || "Failed to save canvas")
       }
 
+      const result = await response.json().catch(() => ({}))
+      if (result?.skipped) {
+        onSaveStatusChange?.("saved")
+        return
+      }
+
       lastSavedRef.current = payload
       onSaveStatusChange?.("saved")
     } catch (error) {

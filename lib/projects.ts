@@ -9,8 +9,18 @@ export interface ProjectSummary {
   isShared: boolean
 }
 
-export async function getProjectsForUser(userId: string, email?: string) {
-  const normalizedEmail = email?.trim().toLowerCase()
+export async function getProjectsForUser(userId: string, emails?: string | string[]) {
+  const emailList = Array.isArray(emails)
+    ? emails
+    : typeof emails === "string"
+      ? [emails]
+      : []
+
+  const normalizedEmails = new Set(
+    emailList
+      .map((email) => email?.trim().toLowerCase())
+      .filter((email): email is string => Boolean(email))
+  )
 
   try {
     const [ownedProjects, sharedProjects] = await Promise.all([
@@ -18,10 +28,14 @@ export async function getProjectsForUser(userId: string, email?: string) {
         where: { ownerId: userId },
         orderBy: { createdAt: "desc" },
       }),
-      normalizedEmail
+      normalizedEmails.size
         ? db.project.findMany({
             where: {
-              collaborators: { some: { collaboratorEmail: normalizedEmail } },
+              collaborators: {
+                some: {
+                  collaboratorEmail: { in: [...normalizedEmails] },
+                },
+              },
             },
             orderBy: { createdAt: "desc" },
           })
@@ -35,7 +49,7 @@ export async function getProjectsForUser(userId: string, email?: string) {
   } catch (error) {
     console.error("Failed to load projects for user", {
       userId,
-      normalizedEmail,
+      normalizedEmails: Array.from(new Set(emailList.map((email) => email?.trim().toLowerCase()).filter(Boolean))),
       error,
     })
 
