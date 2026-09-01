@@ -1,17 +1,15 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { Bot, Download, FileText, SendHorizonal, Sparkles, X } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
+import { useCreateFeed, useCreateFeedMessage, useFeedMessages } from "@liveblocks/react"
+import { useRealtimeRun } from "@trigger.dev/react-hooks"
+import { useEffect, useRef, useState } from "react"
+import { Bot, Download, FileText, Loader2, SendHorizonal, Sparkles, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-
-type ChatMessage = {
-  id: string
-  sender: "user" | "assistant"
-  text: string
-}
+import { getAiChatMessages, getLatestAiStatusMessage } from "@/types/tasks"
 
 const starterPrompts = [
   "Design an e-commerce backend",
@@ -19,17 +17,91 @@ const starterPrompts = [
   "Build a CI/CD pipeline",
 ]
 
-export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function AISidebar({
+  isOpen,
+  onClose,
+  projectId,
+  roomId,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  projectId?: string
+  roomId?: string
+}) {
+  const { user } = useUser()
   const [activeTab, setActiveTab] = useState("architect")
   const [draft, setDraft] = useState("")
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome-message",
-      sender: "assistant",
-      text: "I can help shape the system architecture, spec details, and technical flow for this workspace.",
-    },
-  ])
+  const [sendError, setSendError] = useState<string | null>(null)
+  const [isSending, setIsSending] = useState(false)
+  const [activeRunId, setActiveRunId] = useState<string | null>(null)
+  const [publicToken, setPublicToken] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const handledRunIdsRef = useRef<Set<string>>(new Set())
+  const createFeed = useCreateFeed()
+  const createFeedMessage = useCreateFeedMessage()
+  const { messages: aiStatusMessages, isLoading: isFeedLoading } = useFeedMessages("ai-status-feed", {
+    limit: 20,
+  })
+  const { messages: aiChatMessages } = useFeedMessages("ai-chat", {
+    limit: 50,
+  })
+  const chatMessages = getAiChatMessages(aiChatMessages)
+  const latestAiStatus = getLatestAiStatusMessage(aiStatusMessages)
+  const { run, error: runError } = useRealtimeRun(activeRunId ?? undefined, {
+    accessToken: publicToken ?? undefined,
+    enabled: Boolean(activeRunId && publicToken),
+    skipColumns: ["payload", "output"],
+  })
+  const isAiActive = Boolean(latestAiStatus && (latestAiStatus.phase === "start" || latestAiStatus.phase === "processing"))
+  const runStatusesInFlight = new Set([
+    "WAITING_FOR_DEPLOY",
+    "QUEUED",
+    "EXECUTING",
+    "REATTEMPTING",
+    "FROZEN",
+    "DELAYED",
+    "INTERRUPTED",
+  ])
+  const isRunActive = Boolean(activeRunId) && (!run || runStatusesInFlight.has(run.status))
+  const terminalStatuses = new Set(["COMPLETED", "FAILED", "CANCELED", "CRASHED", "EXPIRED", "TIMED_OUT", "SYSTEM_FAILURE"])
+  const statusText = latestAiStatus?.text ?? latestAiStatus?.message ?? (isFeedLoading ? "Syncing AI status..." : isRunActive ? "AI is generating your design..." : runError ? "Unable to sync the active AI run." : "Waiting for the next AI update")
+
+  useEffect(() => {
+    void createFeed("ai-chat", {
+      metadata: {
+        name: "AI Chat",
+        type: "ai-chat",
+      },
+    }).catch(() => undefined)
+  }, [createFeed])
+
+  useEffect(() => {
+    if (!activeRunId || !run || !terminalStatuses.has(run.status) || handledRunIdsRef.current.has(activeRunId)) {
+      return
+    }
+
+    handledRunIdsRef.current.add(activeRunId)
+
+    const output = (run.output ?? {}) as { summary?: string; error?: string; ok?: boolean }
+    const finalContent =
+      run.status === "COMPLETED"
+        ? output.summary || "The design update is complete and the canvas has been refreshed."
+        : output.error || "The AI design run ended with an error."
+
+    void createFeedMessage("ai-chat", {
+      type: "ai-chat",
+      sender: "Ghost AI",
+      role: "assistant",
+      content: finalContent,
+      timestamp: new Date().toISOString(),
+    })
+      .catch(() => undefined)
+      .finally(() => {
+        setActiveRunId(null)
+        setPublicToken(null)
+        setIsSending(false)
+      })
+  }, [activeRunId, createFeedMessage, run])
 
   function resizeTextarea() {
     const textarea = textareaRef.current
@@ -39,30 +111,57 @@ export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     textarea.style.height = `${Math.min(Math.max(textarea.scrollHeight, 72), 160)}px`
   }
 
-  function handleSubmit(nextValue?: string) {
+  async function handleSubmit(nextValue?: string) {
     const trimmed = (nextValue ?? draft).trim()
-    if (!trimmed) return
+    if (!trimmed || isAiActive || isRunActive || isSending || !projectId || !roomId) return
 
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      sender: "user",
-      text: trimmed,
+    setIsSending(true)
+    setSendError(null)
+
+    const displayName = user?.fullName || user?.firstName || "You"
+    const payload = {
+      type: "ai-chat",
+      sender: displayName,
+      role: "user",
+      content: trimmed,
+      timestamp: new Date().toISOString(),
     }
 
-    const assistantMessage: ChatMessage = {
-      id: `assistant-${Date.now()}`,
-      sender: "assistant",
-      text: "I’ve captured that direction. I’ll turn it into a structured architecture plan and spec outline next.",
+    try {
+      await createFeedMessage("ai-chat", payload)
+      setDraft("")
+      requestAnimationFrame(() => {
+        const textarea = textareaRef.current
+        if (!textarea) return
+        textarea.style.height = "72px"
+      })
+
+      const response = await fetch("/api/ai/design", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: trimmed,
+          roomId,
+          projectId,
+        }),
+      })
+
+      const data = (await response.json().catch(() => ({}))) as { runId?: string; publicToken?: string; error?: string }
+      if (!response.ok || !data.runId || !data.publicToken) {
+        throw new Error(data.error || "Could not start the AI design task.")
+      }
+
+      handledRunIdsRef.current.delete(data.runId)
+      setActiveRunId(data.runId)
+      setPublicToken(data.publicToken)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Message could not be sent. Please try again."
+      setSendError(message)
+    } finally {
+      setIsSending(false)
     }
-
-    setMessages((current) => [...current, userMessage, assistantMessage])
-    setDraft("")
-
-    requestAnimationFrame(() => {
-      const textarea = textareaRef.current
-      if (!textarea) return
-      textarea.style.height = "72px"
-    })
   }
 
   function handleTextareaKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -119,8 +218,25 @@ export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         </div>
 
         <TabsContent className="mt-0 flex flex-1 flex-col" value="architect">
+          <div className="border-b border-border px-3 py-2">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-2.5 py-2">
+              <div className="flex items-center gap-2">
+                <div className={[
+                  "flex h-2.5 w-2.5 rounded-full",
+                  isAiActive ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.85)]" : "bg-emerald-400",
+                ].join(" ")} />
+                <span className="text-[11px] font-medium text-foreground">
+                  {isAiActive ? "AI is working" : "AI ready"}
+                </span>
+              </div>
+              {isAiActive && <Loader2 aria-label="AI is generating" className="h-3.5 w-3.5 animate-spin text-amber-400" />}
+            </div>
+            {statusText && (
+              <p className="mt-2 text-[11px] leading-5 text-muted-foreground">{statusText}</p>
+            )}
+          </div>
           <div className="flex-1 overflow-y-auto px-3 py-3">
-            {messages.length === 0 ? (
+            {chatMessages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-background/40 p-6 text-center">
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent-foreground">
                   <Sparkles className="h-5 w-5" />
@@ -144,20 +260,22 @@ export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
               </div>
             ) : (
               <div className="space-y-3">
-                {messages.map((message) => (
+                {chatMessages.map((message, index) => (
                   <div
-                    key={message.id}
-                    className={message.sender === "user" ? "flex justify-end" : "flex justify-start"}
+                    key={`${message.timestamp ?? index}-${message.sender ?? "user"}`}
+                    className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
                   >
-                    <div
-                      className={[
-                        "max-w-[84%] rounded-2xl border px-3 py-2 text-sm leading-6",
-                        message.sender === "user"
-                          ? "border-brand/50 bg-accent/15 text-foreground"
-                          : "border-border bg-background/60 text-foreground",
-                      ].join(" ")}
-                    >
-                      {message.text}
+                    <div className={[
+                      "max-w-[84%] rounded-2xl border px-3 py-2 text-sm leading-6",
+                      message.role === "user"
+                        ? "border-brand/50 bg-accent/15 text-foreground"
+                        : "border-border bg-background/60 text-foreground",
+                    ].join(" ")}>
+                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                        <span>{message.sender ?? "Guest"}</span>
+                        <span>{message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "Now"}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
                     </div>
                   </div>
                 ))}
@@ -181,8 +299,9 @@ export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             <div className="flex items-end gap-2 rounded-xl border border-border bg-background/50 p-2">
               <Textarea
                 ref={textareaRef}
-                className="min-h-[72px] max-h-[160px] resize-none border-0 bg-transparent p-0 shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
-                placeholder="Describe your architecture..."
+                className="min-h-[72px] max-h-[160px] resize-none border-0 bg-transparent p-0 shadow-none placeholder:text-muted-foreground focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isAiActive || isRunActive || isSending}
+                placeholder={isAiActive || isRunActive ? "AI is working on your prompt..." : "Describe your architecture..."}
                 value={draft}
                 onChange={(event) => {
                   setDraft(event.target.value)
@@ -192,13 +311,17 @@ export function AISidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                 onKeyDown={handleTextareaKeyDown}
               />
               <Button
-                className="h-9 w-9 shrink-0 rounded-full bg-accent p-0 text-white hover:bg-accent/90"
+                className="h-9 w-9 shrink-0 rounded-full bg-accent p-0 text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isAiActive || isRunActive || isSending || !draft.trim()}
                 type="button"
                 onClick={() => handleSubmit()}
               >
-                <SendHorizonal className="h-4 w-4" />
+                {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizonal className="h-4 w-4" />}
               </Button>
             </div>
+            {sendError && (
+              <p className="mt-2 text-[11px] text-rose-300">{sendError}</p>
+            )}
           </div>
         </TabsContent>
 

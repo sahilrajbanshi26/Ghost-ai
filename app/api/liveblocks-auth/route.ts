@@ -18,11 +18,12 @@ export async function POST(request: Request) {
   const roomId = typeof roomValue === "string" ? roomValue.trim() : ""
   if (!roomId) return Response.json({ error: "Project ID is required" }, { status: 400 })
 
-  const access = await getProjectAccess(
-    roomId,
-    user.id,
-    user.primaryEmailAddress?.emailAddress
-  )
+  const emails = [
+    user.primaryEmailAddress?.emailAddress,
+    ...user.emailAddresses.map((entry) => entry.emailAddress),
+  ].filter((email): email is string => Boolean(email))
+
+  const access = await getProjectAccess(roomId, user.id, emails)
   if (!access?.canView) return Response.json({ error: "Forbidden" }, { status: 403 })
 
   const displayName =

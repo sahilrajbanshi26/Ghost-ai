@@ -1,12 +1,16 @@
-import { tasks } from "@trigger.dev/sdk";
+import { currentUser } from "@clerk/nextjs/server";
+import { auth, tasks } from "@trigger.dev/sdk";
 
 import { getProjectAccess } from "@/lib/collaborators";
-import { requireUserId } from "@/lib/api-auth";
 import { db } from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const userId = await requireUserId();
-  if (userId instanceof Response) return userId;
+  const user = await currentUser();
+  if (!user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const userId = user.id;
 
   let body: { prompt?: unknown; roomId?: unknown; projectId?: unknown };
   try {
@@ -26,7 +30,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const access = await getProjectAccess(projectId, userId);
+  const emails = [
+    user.primaryEmailAddress?.emailAddress,
+    ...user.emailAddresses.map((entry) => entry.emailAddress),
+  ].filter((email): email is string => Boolean(email));
+
+  const access = await getProjectAccess(projectId, userId, emails);
 
   if (!access?.canView) {
     return Response.json({ error: "Project not found or access denied" }, { status: 404 });
@@ -49,7 +58,15 @@ export async function POST(request: Request) {
       },
     });
 
-    return Response.json({ runId: handle.id, taskId: "design-agent" }, { status: 202 });
+    const publicToken = await auth.createPublicToken({
+      scopes: {
+        read: {
+          runs: [handle.id],
+        },
+      },
+    });
+
+    return Response.json({ runId: handle.id, publicToken: publicToken, taskId: "design-agent" }, { status: 202 });
   } catch (error) {
     console.error("Failed to trigger design agent", { error, projectId, roomId, userId });
     return Response.json({ error: "Failed to trigger design task" }, { status: 500 });

@@ -476,7 +476,10 @@ function PresenceAndFlow({ projectName, projectId, onSaveStatusChange, onSaveRef
   useEffect(() => {
     if (!projectId || flow.isLoading) return
 
-    const shouldRestoreSavedCanvas = flow.nodes.length <= initialNodes.length && flow.edges.length === 0 && flow.nodes.every((node) => initialNodes.some((initialNode) => initialNode.id === node.id))
+    const liveNodes = Array.isArray(flow.nodes) ? flow.nodes : []
+    const liveEdges = Array.isArray(flow.edges) ? flow.edges : []
+
+    const shouldRestoreSavedCanvas = liveNodes.length <= initialNodes.length && liveEdges.length === 0 && liveNodes.every((node) => initialNodes.some((initialNode) => initialNode.id === node.id))
     if (!shouldRestoreSavedCanvas) return
 
     let cancelled = false
@@ -686,12 +689,8 @@ export function LiveCanvas({ roomId, projectName, onSaveStatusChange, onSaveRef 
   }
 
   return (
-    <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
-      <RoomProvider key={`${roomId}-${user.id}`} id={roomId} initialPresence={{ cursor: null, thinking: false, tabId: "" }} initialStorage={{} as never}>
-        <ReactFlowProvider>
-          <PresenceAndFlow projectId={roomId} projectName={projectName} onSaveStatusChange={onSaveStatusChange} onSaveRef={onSaveRef} />
-        </ReactFlowProvider>
-      </RoomProvider>
-    </LiveblocksProvider>
+    <ReactFlowProvider>
+      <PresenceAndFlow projectId={roomId} projectName={projectName} onSaveStatusChange={onSaveStatusChange} onSaveRef={onSaveRef} />
+    </ReactFlowProvider>
   )
 }

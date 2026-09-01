@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-* Feature 21: Design Agent API & Trigger Wiring Complete
+* Feature 24: AI runtime configuration and design-flow validation in progress
 
 ## Current Goal
 
-* Add the backend design-generation trigger flow, persist run metadata in Prisma, and return run-scoped access tokens without yet adding AI generation logic.
+* Remove the configuration blockers affecting the Google AI key and live Trigger/Liveblocks runtime, then verify the sidebar and design task can start and report real statuses without silent failures.
 
 ## Completed
 
@@ -31,11 +31,13 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## In Progress
 
-* None.
+* Feature 24: the room-scoped `ai-chat` feed and `ai-status-feed` remain separate, and the frontend is guarded so it only listens to a real run when both a run ID and public token are present.
+* Feature 23: the AI worker now fails with a clear runtime error if the Google key is missing, instead of silently producing broken behavior.
+* Feature 22: Trigger.dev and Liveblocks runtime readiness are being validated in the local environment so the design agent can publish actual room updates and canvas mutations.
 
 ## Next Up
 
-* None.
+* Verify the local app and Trigger worker start cleanly in a real runtime context and confirm the prompt-to-run-to-canvas flow produces visible status updates and diagram changes.
 
 ## Open Questions
 

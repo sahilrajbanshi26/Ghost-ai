@@ -22,8 +22,12 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
         {
           collaborators: {
             some: {
-              collaboratorEmail:
-                user.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? "",
+              collaboratorEmail: {
+                in: [
+                  user.primaryEmailAddress?.emailAddress,
+                  ...user.emailAddresses.map((entry) => entry.emailAddress),
+                ].filter((email): email is string => Boolean(email)),
+              },
             },
           },
         },
@@ -35,7 +39,10 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
 
   const { ownedProjects, sharedProjects } = await getProjectsForUser(
     user.id,
-    user.primaryEmailAddress?.emailAddress
+    [
+      user.primaryEmailAddress?.emailAddress,
+      ...user.emailAddresses.map((entry) => entry.emailAddress),
+    ].filter((email): email is string => Boolean(email))
   )
 
   return (
